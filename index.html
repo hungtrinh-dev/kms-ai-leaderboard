@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMS AI Tips Sharing Program</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #27aae1 0%, #1e90ff 100%);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #27aae1 0%, #1e90ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+        }
+
+        .tab-active {
+            background: linear-gradient(135deg, #27aae1 0%, #1e90ff 100%);
+            color: white;
+        }
+
+        .reward-card {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reward-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .reward-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        /* Technology Pattern Styles */
+        .tech-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .circuit-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            height: 1px;
+            animation: circuit-flow 4s linear infinite;
+        }
+
+        @keyframes circuit-flow {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(100vw);
+                opacity: 0;
+            }
+        }
+
+        .tech-dots {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            animation: dot-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes dot-pulse {
+
+            0%,
+            100% {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+        }
+
+        .tech-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+        }
+
+        @keyframes grid-move {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(50px, 50px);
+            }
+        }
+
+        .hexagon {
+            position: absolute;
+            width: 60px;
+            height: 34.64px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 17.32px 0;
+            border-radius: 6px;
+            animation: hexagon-float 8s ease-in-out infinite;
+        }
+
+        .hexagon:before,
+        .hexagon:after {
+            content: "";
+            position: absolute;
+            width: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+        }
+
+        .hexagon:before {
+            bottom: 100%;
+            border-bottom: 17.32px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hexagon:after {
+            top: 100%;
+            border-top: 17.32px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes hexagon-float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            33% {
+                transform: translateY(-20px) rotate(120deg);
+            }
+
+            66% {
+                transform: translateY(10px) rotate(240deg);
+            }
+        }
+
+        .code-rain {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.3);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            animation: code-fall 6s linear infinite;
+        }
+
+        @keyframes code-fall {
+            0% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        .ai-brain {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: brain-pulse 4s ease-in-out infinite;
+        }
+
+        .ai-brain::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ai-brain::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes brain-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 overflow-x-hidden">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-gradient-to-r from-[#27aae1] to-[#1e90ff] shadow-lg">
+        <div class="container mx-auto px-4 sm:px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center justify-center">
+                        <img src="https://kms-technology.com/wp-content/uploads/2022/03/logo-white.svg"
+                            alt="KMS Technology" class="h-14 w-auto"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                    </div>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="#program" class="text-white/80 hover:text-white transition-colors font-medium">Program</a>
+                    <a href="#participate"
+                        class="text-white/80 hover:text-white transition-colors font-medium">Participate</a>
+                    <a href="#rewards" class="text-white/80 hover:text-white transition-colors font-medium">Rewards</a>
+                    <a href="#submit" class="text-white/80 hover:text-white transition-colors font-medium">Submit</a>
+                    <a href="#leaderboard"
+                        class="text-white/80 hover:text-white transition-colors font-medium">Leaderboard</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="md:hidden text-white hover:text-white/80 transition-colors">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="md:hidden hidden mt-4 pb-4 border-t border-white/20">
+                <div class="flex flex-col space-y-4 pt-4">
+                    <a href="#program"
+                        class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium">Program</a>
+                    <a href="#participate"
+                        class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium">Participate</a>
+                    <a href="#rewards"
+                        class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium">Rewards</a>
+                    <a href="#submit"
+                        class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium">Submit</a>
+                    <a href="#leaderboard"
+                        class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium">Leaderboard</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg min-h-screen flex items-center relative overflow-hidden pt-24 pb-20">
+        <!-- Technology Pattern Background -->
+        <div class="tech-pattern">
+            <!-- Animated Grid -->
+            <div class="tech-grid"></div>
+
+            <!-- Circuit Lines -->
+            <div class="circuit-line" style="top: 20%; width: 300px; animation-delay: 0s;"></div>
+            <div class="circuit-line" style="top: 40%; width: 400px; animation-delay: 1s;"></div>
+            <div class="circuit-line" style="top: 60%; width: 250px; animation-delay: 2s;"></div>
+            <div class="circuit-line" style="top: 80%; width: 350px; animation-delay: 3s;"></div>
+
+            <!-- Tech Dots -->
+            <div class="tech-dots" style="top: 15%; left: 10%; animation-delay: 0s;"></div>
+            <div class="tech-dots" style="top: 25%; left: 80%; animation-delay: 0.5s;"></div>
+            <div class="tech-dots" style="top: 45%; left: 15%; animation-delay: 1s;"></div>
+            <div class="tech-dots" style="top: 65%; left: 85%; animation-delay: 1.5s;"></div>
+            <div class="tech-dots" style="top: 75%; left: 25%; animation-delay: 2s;"></div>
+            <div class="tech-dots" style="top: 85%; left: 70%; animation-delay: 2.5s;"></div>
+
+            <!-- Hexagons -->
+            <div class="hexagon" style="top: 10%; left: 70%; animation-delay: 0s;"></div>
+            <div class="hexagon" style="top: 30%; left: 5%; animation-delay: 2s;"></div>
+            <div class="hexagon" style="top: 70%; left: 80%; animation-delay: 4s;"></div>
+
+            <!-- AI Brain Elements -->
+            <div class="ai-brain" style="top: 20%; right: 10%; animation-delay: 0s;"></div>
+            <div class="ai-brain" style="bottom: 30%; left: 5%; animation-delay: 2s;"></div>
+
+            <!-- Code Rain -->
+            <div class="code-rain" style="left: 5%; animation-delay: 0s;">01001</div>
+            <div class="code-rain" style="left: 15%; animation-delay: 1s;">AI{}</div>
+            <div class="code-rain" style="left: 25%; animation-delay: 2s;">ML</div>
+            <div class="code-rain" style="left: 35%; animation-delay: 3s;">10110</div>
+            <div class="code-rain" style="left: 45%; animation-delay: 4s;">API</div>
+            <div class="code-rain" style="left: 55%; animation-delay: 1.5s;">GPT</div>
+            <div class="code-rain" style="left: 65%; animation-delay: 2.5s;">01010</div>
+            <div class="code-rain" style="left: 75%; animation-delay: 3.5s;">AI</div>
+            <div class="code-rain" style="left: 85%; animation-delay: 0.5s;">11001</div>
+            <div class="code-rain" style="left: 95%; animation-delay: 4.5s;">BOT</div>
+
+            <!-- Floating Background Elements -->
+            <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl opacity-5 float-animation">
+            </div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl opacity-5 float-animation"
+                style="animation-delay: -3s;"></div>
+        </div>
+
+        <div class="container mx-auto px-4 sm:px-6 relative z-10 w-full">
+            <div class="text-center text-white max-w-6xl mx-auto">
+                <div class="fade-in">
+                    <h1
+                        class="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-relaxed">
+                        AI FOR EVERYONE
+                        <p
+                            class="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mt-1 sm:mt-2 pb-2">
+                            Community-driven Initiative Small tips, Big impact
+                        </p>
+                    </h1>
+                </div>
+                <div class="fade-in" style="animation-delay: 0.2s;">
+                    <p
+                        class="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
+                        Join KMS Technology's community-driven initiative to share AI tips, automation hacks,
+                        and daily work enhancements
+                    </p>
+                </div>
+                <div class="fade-in" style="animation-delay: 0.4s;">
+                    <button onclick="scrollToSection('program')"
+                        class="bg-white text-[#27aae1] px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        Explore Program <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white opacity-60 hidden sm:block">
+            <div class="flex flex-col items-center">
+                <span class="text-sm mb-2">Scroll to explore</span>
+                <div class="w-6 h-10 border-2 border-white rounded-full flex justify-center">
+                    <div class="w-1 h-3 bg-white rounded-full mt-2 pulse-dot"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Program Introduction Section -->
+    <section id="program" class="py-12 sm:py-16 lg:py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12 sm:mb-16 fade-in">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4 sm:mb-6 pb-2">About Our Program
+                </h2>
+                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                    A lightweight, community-driven initiative to foster grassroots AI adoption with a "bottom-up"
+                    culture
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+                <div
+                    class="text-center p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 card-hover fade-in">
+                    <div
+                        class="w-14 h-14 sm:w-16 sm:h-16 bg-[#27aae1] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                        <i class="fas fa-lightbulb text-white text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Collect AI Tips</h3>
+                    <p class="text-sm sm:text-base text-gray-600 leading-relaxed">
+                        Gather AI tips, automation hacks, and daily work enhancements from all staff members
+                    </p>
+                </div>
+
+                <div class="text-center p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-100 card-hover fade-in"
+                    style="animation-delay: 0.1s;">
+                    <div
+                        class="w-14 h-14 sm:w-16 sm:h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                        <i class="fas fa-book text-white text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Knowledge Base</h3>
+                    <p class="text-sm sm:text-base text-gray-600 leading-relaxed">
+                        Create a comprehensive playbook of approved and useful AI tips for company-wide reference
+                    </p>
+                </div>
+
+                <div class="text-center p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 card-hover fade-in"
+                    style="animation-delay: 0.2s;">
+                    <div
+                        class="w-14 h-14 sm:w-16 sm:h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                        <i class="fas fa-check-circle text-white text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Validate & Publish</h3>
+                    <p class="text-sm sm:text-base text-gray-600 leading-relaxed">
+                        Evaluate, validate, and publish practical use cases for maximum impact
+                    </p>
+                </div>
+
+                <div class="text-center p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-orange-50 to-red-100 card-hover fade-in"
+                    style="animation-delay: 0.3s;">
+                    <div
+                        class="w-14 h-14 sm:w-16 sm:h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                        <i class="fas fa-users text-white text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Community Driven</h3>
+                    <p class="text-sm sm:text-base text-gray-600 leading-relaxed">
+                        Encourage grassroots AI adoption with a collaborative "bottom-up" culture
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Participate Section -->
+    <section id="participate" class="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12 sm:mb-16 fade-in">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4 sm:mb-6 pb-2">How to
+                    Participate
+                </h2>
+                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                    Follow these simple steps to contribute your AI tips and join our growing community
+                </p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div class="relative">
+                    <!-- Timeline Line -->
+                    <div
+                        class="absolute left-6 sm:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-400 to-purple-600 hidden sm:block">
+                    </div>
+
+                    <!-- Step 1 -->
+                    <div class="flex items-start mb-12 fade-in">
+                        <div
+                            class="flex-shrink-0 w-16 h-16 bg-[#27aae1] rounded-full flex items-center justify-center text-white font-bold text-xl mr-8 relative z-10">
+                            1
+                        </div>
+                        <div class="flex-1 bg-white p-8 rounded-2xl shadow-lg card-hover">
+                            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Identify Your AI Tip</h3>
+                            <p class="text-gray-600 mb-4">
+                                Think about AI tools, prompts, or automation techniques that have improved your daily
+                                work.
+                                It could be anything from ChatGPT prompts to workflow automations.
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">AI Prompts</span>
+                                <span
+                                    class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Automation</span>
+                                <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">Tools</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex items-start mb-12 fade-in" style="animation-delay: 0.1s;">
+                        <div
+                            class="flex-shrink-0 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl mr-8 relative z-10">
+                            2
+                        </div>
+                        <div class="flex-1 bg-white p-8 rounded-2xl shadow-lg card-hover">
+                            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Document Your Tip</h3>
+                            <p class="text-gray-600 mb-4">
+                                Create clear documentation including the problem solved, step-by-step instructions,
+                                and expected outcomes. Include screenshots or examples if helpful.
+                            </p>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Problem description
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Step-by-step guide
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Screenshots/examples
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    Expected results
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex items-start mb-12 fade-in" style="animation-delay: 0.2s;">
+                        <div
+                            class="flex-shrink-0 w-16 h-16 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-xl mr-8 relative z-10">
+                            3
+                        </div>
+                        <div class="flex-1 bg-white p-8 rounded-2xl shadow-lg card-hover">
+                            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Submit Your Contribution</h3>
+                            <p class="text-gray-600 mb-4">
+                                Use our submission form below to share your AI tip. Include relevant tags and
+                                categorize your submission for easy discovery by other team members.
+                            </p>
+                            <button onclick="scrollToSection('submit')"
+                                class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                                Go to Submission Form <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flex items-start fade-in" style="animation-delay: 0.3s;">
+                        <div
+                            class="flex-shrink-0 w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xl mr-8 relative z-10">
+                            4
+                        </div>
+                        <div class="flex-1 bg-white p-8 rounded-2xl shadow-lg card-hover">
+                            <h3 class="text-2xl font-semibold mb-4 text-gray-800">Earn Points & Recognition</h3>
+                            <p class="text-gray-600 mb-4">
+                                After review and validation, your tip will be published and you'll earn points.
+                                Track your progress on the leaderboard and compete with colleagues!
+                            </p>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                                    <span class="text-sm text-gray-600">Earn Points</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-medal text-purple-500 mr-2"></i>
+                                    <span class="text-sm text-gray-600">Get Recognition</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-gift text-green-500 mr-2"></i>
+                                    <span class="text-sm text-gray-600">Win Rewards</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rewards Section -->
+    <section id="rewards" class="py-12 sm:py-16 lg:py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12 sm:mb-16 fade-in">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4 sm:mb-6 pb-2">Scheme & Rewards
+                </h2>
+                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8 px-4">
+                    What prize is waiting for you?
+                </p>
+            </div>
+
+            <!-- Reward Categories -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
+                <!-- Early Bird Rewards -->
+                <div class="text-center fade-in">
+                    <div class="text-4xl sm:text-5xl lg:text-6xl font-bold gradient-text mb-3 sm:mb-4">03</div>
+                    <div class="reward-card p-6 sm:p-8 text-white mb-4 sm:mb-6">
+                        <h3 class="text-xl sm:text-2xl font-bold mb-2">200,000 VND</h3>
+                    </div>
+                    <div class="bg-gray-100 p-3 sm:p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 text-sm sm:text-base">Early-Bird and Valid Submissions
+                        </h4>
+                    </div>
+                </div>
+
+                <!-- All Participants -->
+                <div class="text-center fade-in sm:col-span-2 lg:col-span-1" style="animation-delay: 0.1s;">
+                    <div class="text-4xl sm:text-5xl lg:text-6xl font-bold gradient-text mb-3 sm:mb-4">All</div>
+                    <div
+                        class="bg-gradient-to-br from-[#27aae1] to-[#1e90ff] p-6 sm:p-8 rounded-2xl text-white mb-4 sm:mb-6">
+                        <h3 class="text-lg sm:text-xl font-bold mb-2">Be credited in Learning Profile</h3>
+                        <h3 class="text-lg sm:text-xl font-bold">& Monthly Leaderboard</h3>
+                    </div>
+                    <div class="bg-gray-100 p-3 sm:p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 text-sm sm:text-base">Valid Submissions</h4>
+                    </div>
+                </div>
+
+                <!-- Top Performers -->
+                <div class="text-center fade-in sm:col-start-2 lg:col-start-auto" style="animation-delay: 0.2s;">
+                    <div class="text-4xl sm:text-5xl lg:text-6xl font-bold gradient-text mb-3 sm:mb-4">03</div>
+                    <div class="reward-card p-6 sm:p-8 text-white mb-4 sm:mb-6">
+                        <h3 class="text-xl sm:text-2xl font-bold mb-2">2,000,000 VND</h3>
+                    </div>
+                    <div class="bg-gray-100 p-3 sm:p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 text-sm sm:text-base">Top Account / Function / Department
+                        </h4>
+                        <h4 class="font-semibold text-gray-800 text-sm sm:text-base">by Accumulated Points (Quarterly)
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Rewards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 fade-in" style="animation-delay: 0.3s;">
+                <div class="text-center">
+                    <div class="reward-card p-4 sm:p-6 text-white mb-3 sm:mb-4">
+                        <h3 class="text-lg sm:text-xl font-bold">50,000 VND</h3>
+                    </div>
+                    <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
+                        <h4 class="font-medium text-gray-800 text-sm sm:text-base">Basic Submission</h4>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="reward-card p-4 sm:p-6 text-white mb-3 sm:mb-4">
+                        <h3 class="text-lg sm:text-xl font-bold">100,000 VND</h3>
+                    </div>
+                    <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
+                        <h4 class="font-medium text-gray-800 text-sm sm:text-base">Intermediate Submission</h4>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="reward-card p-4 sm:p-6 text-white mb-3 sm:mb-4">
+                        <h3 class="text-lg sm:text-xl font-bold">150,000 VND</h3>
+                    </div>
+                    <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
+                        <h4 class="font-medium text-gray-800 text-sm sm:text-base">Advanced Submission</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Submission Form Section -->
+    <section id="submit" class="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12 sm:mb-16 fade-in">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4 sm:mb-6 pb-2">Submit Your AI
+                    Tip
+                </h2>
+                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                    Share your AI knowledge with the KMS community and earn rewards
+                </p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <form class="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-2xl fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Full Name *</label>
+                            <input type="text"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
+                                placeholder="Enter your full name" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Email *</label>
+                            <input type="email"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
+                                placeholder="your.email@kms-technology.com" required>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Department *</label>
+                            <select
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
+                                required>
+                                <option value="">Select your department</option>
+                                <option value="engineering">Engineering</option>
+                                <option value="qa">Quality Assurance</option>
+                                <option value="product">Product Management</option>
+                                <option value="design">Design</option>
+                                <option value="sales">Sales</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="hr">Human Resources</option>
+                                <option value="finance">Finance</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Submission Type *</label>
+                            <select
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
+                                required>
+                                <option value="">Select submission type</option>
+                                <option value="ai-tip">AI Tip</option>
+                                <option value="automation-hack">Automation Hack</option>
+                                <option value="useful-prompt">Useful Prompt</option>
+                                <option value="ai-handbook">AI Handbook</option>
+                                <option value="workflow-enhancement">Workflow Enhancement</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Title *</label>
+                        <input type="text"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
+                            placeholder="Give your AI tip a catchy title" required>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Description *</label>
+                        <textarea rows="6"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
+                            placeholder="Describe your AI tip in detail. Include the problem it solves, step-by-step instructions, and expected outcomes."
+                            required></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Tags</label>
+                        <input type="text"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
+                            placeholder="e.g., ChatGPT, automation, productivity, coding (separate with commas)">
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Attachments</label>
+                        <div
+                            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors duration-300">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 mb-2">Drag and drop files here or click to browse</p>
+                            <p class="text-sm text-gray-500">Screenshots, documents, or examples (Max 10MB each)</p>
+                            <input type="file" class="hidden" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit"
+                            class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white px-12 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                            Submit AI Tip <i class="fas fa-paper-plane ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Section -->
+    <section id="leaderboard" class="py-12 sm:py-16 lg:py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12 sm:mb-16 fade-in">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4 sm:mb-6">Leaderboard</h2>
+                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                    See how you rank among your peers and celebrate top contributors
+                </p>
+            </div>
+
+            <!-- Leaderboard Tabs -->
+            <div class="flex justify-center mb-6 sm:mb-8 fade-in">
+                <div class="bg-gray-100 p-1 rounded-full">
+                    <button id="individualTab"
+                        class="tab-btn px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 tab-active text-sm sm:text-base"
+                        onclick="switchTab('individual')">
+                        Individual
+                    </button>
+                    <button id="teamTab"
+                        class="tab-btn px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 text-gray-600 text-sm sm:text-base"
+                        onclick="switchTab('team')">
+                        Team
+                    </button>
+                </div>
+            </div>
+
+            <!-- Podium Section -->
+            <div class="flex justify-center items-end mb-16 fade-in">
+                <div class="text-center mx-4">
+                    <div class="w-24 h-24 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation"
+                        style="animation-delay: -1s;">
+                        <i class="fas fa-medal text-white text-2xl"></i>
+                    </div>
+                    <div class="bg-gradient-to-br from-gray-200 to-gray-400 p-4 rounded-lg h-32 flex items-end">
+                        <div class="text-center w-full">
+                            <div class="text-sm text-gray-600">2nd Place</div>
+                            <div class="font-semibold">Account Name</div>
+                            <div class="text-sm">850 points</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mx-4">
+                    <div
+                        class="w-32 h-32 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
+                        <i class="fas fa-crown text-white text-3xl"></i>
+                    </div>
+                    <div class="bg-gradient-to-br from-yellow-200 to-yellow-400 p-6 rounded-lg h-40 flex items-end">
+                        <div class="text-center w-full">
+                            <div class="text-sm text-yellow-800">1st Place</div>
+                            <div class="font-bold text-lg">Account Name</div>
+                            <div class="text-sm">1,250 points</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mx-4">
+                    <div class="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation"
+                        style="animation-delay: -2s;">
+                        <i class="fas fa-medal text-white text-xl"></i>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-200 to-orange-400 p-4 rounded-lg h-24 flex items-end">
+                        <div class="text-center w-full">
+                            <div class="text-sm text-orange-800">3rd Place</div>
+                            <div class="font-semibold">Account Name</div>
+                            <div class="text-sm">720 points</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Table -->
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden fade-in">
+                <div class="overflow-x-auto">
+                    <!-- Individual Leaderboard -->
+                    <div id="individualLeaderboard" class="leaderboard-content">
+                        <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-6">
+                            <div
+                                class="grid grid-cols-4 gap-2 sm:gap-4 font-semibold text-sm sm:text-base min-w-[600px]">
+                                <div>Function/Program</div>
+                                <div>Account</div>
+                                <div>Points</div>
+                                <div>Points/Team Size</div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4 min-w-[600px]">
+                                <div
+                                    class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-xs sm:text-sm">
+                                    <div class="font-medium truncate">Engineering</div>
+                                    <div class="truncate">john.doe@kms</div>
+                                    <div class="font-semibold text-[#27aae1]">1,250</div>
+                                    <div class="text-gray-600">125.0</div>
+                                </div>
+                                <div
+                                    class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-gray-50 transition-colors rounded-lg text-xs sm:text-sm">
+                                    <div class="font-medium truncate">Product</div>
+                                    <div class="truncate">jane.smith@kms</div>
+                                    <div class="font-semibold text-[#27aae1]">850</div>
+                                    <div class="text-gray-600">85.0</div>
+                                </div>
+                                <div
+                                    class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-gray-50 transition-colors rounded-lg text-xs sm:text-sm">
+                                    <div class="font-medium truncate">QA</div>
+                                    <div class="truncate">mike.johnson@kms</div>
+                                    <div class="font-semibold text-[#27aae1]">720</div>
+                                    <div class="text-gray-600">72.0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Leaderboard -->
+                    <div id="teamLeaderboard" class="leaderboard-content hidden">
+                        <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-6">
+                            <div
+                                class="grid grid-cols-4 gap-2 sm:gap-4 font-semibold text-sm sm:text-base min-w-[600px]">
+                                <div>Function/Program</div>
+                                <div>Account</div>
+                                <div>Team Size</div>
+                                <div>Points</div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4 min-w-[600px]">
+                                <div
+                                    class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-xs sm:text-sm">
+                                    <div class="font-medium truncate">Engineering Team A</div>
+                                    <div class="truncate">team-a@kms</div>
+                                    <div class="font-semibold">10</div>
+                                    <div class="font-semibold text-[#27aae1]">2,500</div>
+                                </div>
+                                <div
+                                    class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-gray-50 transition-colors rounded-lg text-xs sm:text-sm">
+                                    <div class="font-medium truncate">Product Team B</div>
+                                    <div class="truncate">team-b@kms</div>
+                                    <div class="font-semibold">8</div>
+                                    <div class="font-semibold text-[#27aae1]">1,800</div>
+                                </div>
+                                <div
+                                    class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-gray-50 transition-colors rounded-lg text-xs sm:text-sm">
+                                    <div class="font-medium truncate">QA Team C</div>
+                                    <div class="truncate">team-c@kms</div>
+                                    <div class="font-semibold">6</div>
+                                    <div class="font-semibold text-[#27aae1]">1,200</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="container mx-auto px-6">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-3 mb-6">
+                    <div class="w-12 h-12 flex items-center justify-center">
+                        <img src="https://kms-technology.com/wp-content/uploads/2022/03/logo-white.svg"
+                            alt="KMS Technology" class="h-10 w-auto"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-r from-[#27aae1] to-[#1e90ff] rounded-lg items-center justify-center hidden">
+                            <i class="fas fa-robot text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <span class="text-2xl font-bold">KMS AI Tips Sharing</span>
+                </div>
+                <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
+                    Empowering KMS Technology with community-driven AI knowledge sharing.
+                    Together, we build a smarter, more efficient workplace.
+                </p>
+                <div class="border-t border-gray-800 pt-8">
+                    <p class="text-gray-500">&copy; 2025 KMS Technology. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scrolling function
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+
+        // Tab switching functionality
+        function switchTab(tabType) {
+            const individualTab = document.getElementById('individualTab');
+            const teamTab = document.getElementById('teamTab');
+            const individualBoard = document.getElementById('individualLeaderboard');
+            const teamBoard = document.getElementById('teamLeaderboard');
+
+            if (tabType === 'individual') {
+                individualTab.classList.add('tab-active');
+                individualTab.classList.remove('text-gray-600');
+                teamTab.classList.remove('tab-active');
+                teamTab.classList.add('text-gray-600');
+                individualBoard.classList.remove('hidden');
+                teamBoard.classList.add('hidden');
+            } else {
+                teamTab.classList.add('tab-active');
+                teamTab.classList.remove('text-gray-600');
+                individualTab.classList.remove('tab-active');
+                individualTab.classList.add('text-gray-600');
+                teamBoard.classList.remove('hidden');
+                individualBoard.classList.add('hidden');
+            }
+        }
+
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function () {
+                    mobileMenu.classList.toggle('hidden');
+                });
+
+                // Close mobile menu when clicking on links
+                const mobileLinks = mobileMenu.querySelectorAll('a');
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.classList.add('hidden');
+                    });
+                });
+
+                // Close mobile menu when clicking outside
+                document.addEventListener('click', function (event) {
+                    if (!mobileMenuBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+
+        // File upload handling
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.querySelector('input[type="file"]');
+            const uploadArea = fileInput.parentElement;
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('border-blue-400', 'bg-blue-50');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+                // Handle file drop logic here
+            });
+        });
+
+        // Form submission
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            // Add form submission logic here
+            alert('Thank you for your submission! Your AI tip will be reviewed and published soon.');
+        });
+
+        // Add some initial animation triggers
+        setTimeout(() => {
+            document.querySelectorAll('.fade-in').forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add('visible');
+                }, index * 100);
+            });
+        }, 500);
+
+        // Dynamic Technology Pattern Generation
+        function createDynamicTechElements() {
+            const techPattern = document.querySelector('.tech-pattern');
+            if (!techPattern) return;
+
+            // Create additional floating dots on mouse move
+            document.addEventListener('mousemove', (e) => {
+                if (Math.random() > 0.98) { // Only occasionally create dots
+                    const dot = document.createElement('div');
+                    dot.className = 'tech-dots';
+                    dot.style.left = e.clientX + 'px';
+                    dot.style.top = e.clientY + 'px';
+                    dot.style.position = 'fixed';
+                    dot.style.zIndex = '5';
+                    dot.style.pointerEvents = 'none';
+                    document.body.appendChild(dot);
+
+                    // Remove dot after animation
+                    setTimeout(() => {
+                        if (dot.parentNode) {
+                            dot.parentNode.removeChild(dot);
+                        }
+                    }, 3000);
+                }
+            });
+
+            // Create periodic circuit lines
+            setInterval(() => {
+                const line = document.createElement('div');
+                line.className = 'circuit-line';
+                line.style.top = Math.random() * 100 + '%';
+                line.style.width = (200 + Math.random() * 300) + 'px';
+                line.style.animationDelay = '0s';
+                techPattern.appendChild(line);
+
+                // Remove line after animation
+                setTimeout(() => {
+                    if (line.parentNode) {
+                        line.parentNode.removeChild(line);
+                    }
+                }, 4000);
+            }, 3000);
+
+            // Create floating code elements
+            setInterval(() => {
+                const codeElements = ['AI', 'ML', 'GPT', 'API', 'BOT', '01001', '11010', 'TECH', 'CODE', 'DATA', 'MACHINE LEARNING', 'DEEP LEARNING', 'NLP', 'CRYPTO', 'LLM'];
+                const code = document.createElement('div');
+                code.className = 'code-rain';
+                code.textContent = codeElements[Math.floor(Math.random() * codeElements.length)];
+                code.style.left = Math.random() * 100 + '%';
+                code.style.animationDelay = '0s';
+                code.style.fontSize = (12 + Math.random() * 8) + 'px';
+                techPattern.appendChild(code);
+
+                // Remove code after animation
+                setTimeout(() => {
+                    if (code.parentNode) {
+                        code.parentNode.removeChild(code);
+                    }
+                }, 6000);
+            }, 2000);
+        }
+
+        // Initialize dynamic tech elements
+        document.addEventListener('DOMContentLoaded', createDynamicTechElements);
+    </script>
+</body>
+
+</html>
