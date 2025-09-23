@@ -303,13 +303,13 @@
                 opacity: 1;
             }
         }
-        
+
         /* Enhanced glow effect for hero tagline */
         .hero-tagline {
             position: relative;
             display: inline-block;
         }
-        
+
         .hero-tagline::before {
             content: '';
             position: absolute;
@@ -321,18 +321,21 @@
             z-index: -1;
             animation: glow-pulse 3s ease-in-out infinite;
         }
-        
+
         @keyframes glow-pulse {
-            0%, 100% { 
+
+            0%,
+            100% {
                 opacity: 0.6;
                 transform: scale(0.98);
             }
-            50% { 
+
+            50% {
                 opacity: 0.9;
                 transform: scale(1.02);
             }
         }
-        
+
         .hero-tagline-text {
             background: linear-gradient(135deg, #f8fafc, #e2e8f0, #cbd5e1);
             -webkit-background-clip: text;
@@ -342,12 +345,15 @@
             animation: text-shimmer 4s ease-in-out infinite;
             text-shadow: 0 0 20px rgba(148, 163, 184, 0.3);
         }
-        
+
         @keyframes text-shimmer {
-            0%, 100% { 
+
+            0%,
+            100% {
                 filter: drop-shadow(0 0 12px rgba(148, 163, 184, 0.6)) brightness(1);
             }
-            50% { 
+
+            50% {
                 filter: drop-shadow(0 0 24px rgba(148, 163, 184, 0.9)) brightness(1.15);
             }
         }
@@ -809,22 +815,22 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Full Name *</label>
-                            <input type="text"
+                            <input type="text" name="fullName"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
                                 placeholder="Enter your full name" required>
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Email *</label>
-                            <input type="email"
+                            <input type="email" name="email"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
                                 placeholder="your.email@kms-technology.com" required>
                         </div>
                     </div>
 
-                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Department *</label>
-                            <select
+                            <select name="department"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
                                 required>
                                 <option value="">Select your department</option>
@@ -841,7 +847,7 @@
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Submission Type *</label>
-                            <select
+                            <select name="submissionType"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
                                 required>
                                 <option value="">Select submission type</option>
@@ -856,14 +862,14 @@
 
                     <div class="mb-6">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Title *</label>
-                        <input type="text"
+                        <input type="text" name="title"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
                             placeholder="Give your AI tip a catchy title" required>
                     </div>
 
                     <div class="mb-6">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Description *</label>
-                        <textarea rows="6"
+                        <textarea rows="6" name="description"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
                             placeholder="Describe your AI tip in detail. Include the problem it solves, step-by-step instructions, and expected outcomes."
                             required></textarea>
@@ -871,7 +877,7 @@
 
                     <div class="mb-6">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Tags</label>
-                        <input type="text"
+                        <input type="text" name="tags"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#27aae1] focus:border-transparent transition-all duration-300"
                             placeholder="e.g., ChatGPT, automation, productivity, coding (separate with commas)">
                     </div>
@@ -925,45 +931,105 @@
             </div>
 
             <!-- Podium Section -->
-            <div class="flex justify-center items-end mb-16 fade-in">
-                <div class="text-center mx-4">
-                    <div class="w-24 h-24 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation"
-                        style="animation-delay: -1s;">
-                        <i class="fas fa-medal text-white text-2xl"></i>
+            <div class="mb-12 sm:mb-16 fade-in">
+                <!-- Mobile Layout (Vertical Stack) -->
+                <div class="flex flex-col space-y-6 sm:hidden">
+                    <!-- 1st Place (Top on mobile) -->
+                    <div class="text-center">
+                        <div
+                            class="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation shadow-lg">
+                            <i class="fas fa-crown text-white text-2xl sm:text-3xl"></i>
+                        </div>
+                        <div
+                            class="bg-gradient-to-br from-yellow-200 to-yellow-400 p-4 sm:p-6 rounded-xl shadow-lg max-w-xs mx-auto">
+                            <div class="text-center">
+                                <div class="text-sm text-yellow-800 font-semibold">🏆 1st Place</div>
+                                <div class="font-bold text-lg text-yellow-900">Account Name</div>
+                                <div class="text-sm text-yellow-800">1,250 points</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gradient-to-br from-gray-200 to-gray-400 p-4 rounded-lg h-32 flex items-end">
-                        <div class="text-center w-full">
-                            <div class="text-sm text-gray-600">2nd Place</div>
-                            <div class="font-semibold">Account Name</div>
-                            <div class="text-sm">850 points</div>
+
+                    <!-- 2nd Place -->
+                    <div class="text-center">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation shadow-lg"
+                            style="animation-delay: -1s;">
+                            <i class="fas fa-medal text-white text-xl sm:text-2xl"></i>
+                        </div>
+                        <div
+                            class="bg-gradient-to-br from-gray-200 to-gray-400 p-4 rounded-xl shadow-lg max-w-xs mx-auto">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-700 font-semibold">🥈 2nd Place</div>
+                                <div class="font-semibold text-gray-800">Account Name</div>
+                                <div class="text-sm text-gray-600">850 points</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3rd Place -->
+                    <div class="text-center">
+                        <div class="w-18 h-18 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 float-animation shadow-lg ring-4 ring-gray-300 ring-opacity-50"
+                            style="animation-delay: -2s;">
+                            <i class="fas fa-medal text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div
+                            class="bg-gradient-to-br from-gray-100 to-gray-200 p-4 rounded-xl shadow-lg border border-gray-300 max-w-xs mx-auto">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-700 font-semibold">🥉 3rd Place</div>
+                                <div class="font-semibold text-gray-800">Account Name</div>
+                                <div class="text-sm text-gray-600">720 points</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="text-center mx-4">
-                    <div
-                        class="w-32 h-32 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
-                        <i class="fas fa-crown text-white text-3xl"></i>
-                    </div>
-                    <div class="bg-gradient-to-br from-yellow-200 to-yellow-400 p-6 rounded-lg h-40 flex items-end">
-                        <div class="text-center w-full">
-                            <div class="text-sm text-yellow-800">1st Place</div>
-                            <div class="font-bold text-lg">Account Name</div>
-                            <div class="text-sm">1,250 points</div>
+                <!-- Desktop/Tablet Layout (Traditional Podium) -->
+                <div class="hidden sm:flex justify-center items-end space-x-4 lg:space-x-8">
+                    <!-- 2nd Place -->
+                    <div class="text-center flex-1 max-w-xs">
+                        <div class="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation shadow-lg"
+                            style="animation-delay: -1s;">
+                            <i class="fas fa-medal text-white text-xl md:text-2xl"></i>
+                        </div>
+                        <div
+                            class="bg-gradient-to-br from-gray-200 to-gray-400 p-3 md:p-4 rounded-xl h-24 md:h-32 flex items-end shadow-lg">
+                            <div class="text-center w-full">
+                                <div class="text-xs md:text-sm text-gray-600 font-medium">2nd Place</div>
+                                <div class="font-semibold text-sm md:text-base text-gray-800">Account Name</div>
+                                <div class="text-xs md:text-sm text-gray-600">850 points</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="text-center mx-4">
-                    <div class="w-20 h-20 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 float-animation shadow-lg ring-4 ring-gray-300 ring-opacity-50"
-                        style="animation-delay: -2s;">
-                        <i class="fas fa-medal text-white text-xl"></i>
+                    <!-- 1st Place -->
+                    <div class="text-center flex-1 max-w-xs">
+                        <div
+                            class="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 float-animation shadow-lg">
+                            <i class="fas fa-crown text-white text-2xl md:text-3xl"></i>
+                        </div>
+                        <div
+                            class="bg-gradient-to-br from-yellow-200 to-yellow-400 p-4 md:p-6 rounded-xl h-32 md:h-40 flex items-end shadow-lg">
+                            <div class="text-center w-full">
+                                <div class="text-xs md:text-sm text-yellow-800 font-semibold">1st Place</div>
+                                <div class="font-bold text-base md:text-lg text-yellow-900">Account Name</div>
+                                <div class="text-xs md:text-sm text-yellow-800">1,250 points</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gradient-to-br from-gray-100 to-gray-200 p-4 rounded-lg h-24 flex items-end shadow-lg border border-gray-300">
-                        <div class="text-center w-full">
-                            <div class="text-sm text-gray-700 font-semibold">3rd Place</div>
-                            <div class="font-semibold text-gray-800">Account Name</div>
-                            <div class="text-sm text-gray-600">720 points</div>
+
+                    <!-- 3rd Place -->
+                    <div class="text-center flex-1 max-w-xs">
+                        <div class="w-18 h-18 md:w-20 md:h-20 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 float-animation shadow-lg ring-4 ring-gray-300 ring-opacity-50"
+                            style="animation-delay: -2s;">
+                            <i class="fas fa-medal text-white text-lg md:text-xl"></i>
+                        </div>
+                        <div
+                            class="bg-gradient-to-br from-gray-100 to-gray-200 p-3 md:p-4 rounded-xl h-20 md:h-24 flex items-end shadow-lg border border-gray-300">
+                            <div class="text-center w-full">
+                                <div class="text-xs md:text-sm text-gray-700 font-semibold">3rd Place</div>
+                                <div class="font-semibold text-sm md:text-base text-gray-800">Account Name</div>
+                                <div class="text-xs md:text-sm text-gray-600">720 points</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1180,12 +1246,228 @@
             });
         });
 
+        // Form submission configuration
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/a/macros/kms-technology.com/s/AKfycbwBnevZlBdpN5Up45amJZECtVPapXI19V_jTiCH1r5mSi0d3ELcQ7Ctq6HbUm4_q__U/exec';
+
+        // Test mode - set to true for debugging
+        const TEST_MODE = false;
+
         // Form submission
-        document.querySelector('form').addEventListener('submit', function (e) {
+        document.querySelector('form').addEventListener('submit', async function (e) {
             e.preventDefault();
-            // Add form submission logic here
-            alert('Thank you for your submission! Your AI tip will be reviewed and published soon.');
+
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+            submitBtn.classList.add('opacity-75');
+
+            try {
+                // Debug: Log form elements
+                console.log('Form elements found:', {
+                    fullName: form.querySelector('input[name="fullName"]'),
+                    email: form.querySelector('input[name="email"]'),
+                    department: form.querySelector('select[name="department"]'),
+                    submissionType: form.querySelector('select[name="submissionType"]'),
+                    title: form.querySelector('input[name="title"]'),
+                    description: form.querySelector('textarea[name="description"]'),
+                    tags: form.querySelector('input[name="tags"]')
+                });
+
+                // Collect form data safely with fallback selectors
+                const data = {
+                    fullName: form.querySelector('input[name="fullName"]')?.value ||
+                        form.querySelector('input[placeholder*="full name"]')?.value || '',
+                    email: form.querySelector('input[name="email"]')?.value ||
+                        form.querySelector('input[type="email"]')?.value || '',
+                    department: form.querySelector('select[name="department"]')?.value ||
+                        form.querySelector('select')?.value || '',
+                    submissionType: form.querySelector('select[name="submissionType"]')?.value ||
+                        form.querySelectorAll('select')[1]?.value || '',
+                    title: form.querySelector('input[name="title"]')?.value ||
+                        form.querySelector('input[placeholder*="title"]')?.value || '',
+                    description: form.querySelector('textarea[name="description"]')?.value ||
+                        form.querySelector('textarea')?.value || '',
+                    tags: form.querySelector('input[name="tags"]')?.value ||
+                        form.querySelector('input[placeholder*="tags"]')?.value || '',
+                    timestamp: new Date().toISOString(),
+                    attachments: '' // File handling will be implemented separately
+                };
+
+                // Debug: Log collected data
+                console.log('Collected form data:', data);
+
+                // Validate required fields
+                const requiredFields = ['fullName', 'email', 'department', 'submissionType', 'title', 'description'];
+                const missingFields = requiredFields.filter(field => !data[field] || data[field].trim() === '');
+
+                if (missingFields.length > 0) {
+                    throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+                }
+
+                // Validate email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(data.email)) {
+                    throw new Error('Please enter a valid email address.');
+                }
+
+                // Submit to Google Sheets
+                console.log('Submitting to:', GOOGLE_SCRIPT_URL);
+                console.log('Data being sent:', JSON.stringify(data, null, 2));
+
+                // Test mode - simulate successful submission
+                if (TEST_MODE) {
+                    console.log('TEST MODE: Simulating successful submission');
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+
+                    const result = {
+                        success: true,
+                        message: 'TEST MODE: Your AI tip has been submitted successfully! (This is a test - no data was actually sent to Google Sheets)',
+                        submissionId: Math.floor(Math.random() * 1000)
+                    };
+
+                    console.log('Test result:', result);
+
+                    if (result.success) {
+                        showNotification('success', result.message);
+                        form.reset();
+                        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    return;
+                }
+
+                // Production mode - actual Google Sheets submission using form submission
+                // Create a temporary form for Google Apps Script submission
+                const tempForm = document.createElement('form');
+                tempForm.action = GOOGLE_SCRIPT_URL;
+                tempForm.method = 'POST';
+                tempForm.style.display = 'none';
+
+                // Add form fields
+                Object.keys(data).forEach(key => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = data[key];
+                    tempForm.appendChild(input);
+                });
+
+                document.body.appendChild(tempForm);
+
+                // Submit using iframe to avoid page redirect
+                const iframe = document.createElement('iframe');
+                iframe.name = 'hidden_iframe';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                tempForm.target = 'hidden_iframe';
+
+                // Handle iframe load event
+                iframe.onload = function () {
+                    console.log('Form submitted successfully via iframe');
+                    showNotification('success', 'Your AI tip has been submitted successfully!');
+                    form.reset();
+                    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // Cleanup
+                    document.body.removeChild(tempForm);
+                    document.body.removeChild(iframe);
+
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.classList.remove('opacity-75');
+                };
+
+                iframe.onerror = function () {
+                    console.error('Form submission failed via iframe');
+                    showNotification('error', 'Sorry, there was an error submitting your form. Please try again later.');
+
+                    // Cleanup
+                    document.body.removeChild(tempForm);
+                    document.body.removeChild(iframe);
+
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.classList.remove('opacity-75');
+                };
+
+                // Submit the form
+                tempForm.submit();
+
+                // Don't continue with the rest of the try block
+                return;
+
+                if (result.success) {
+                    // Show success message
+                    showNotification('success', result.message || 'Your AI tip has been submitted successfully!');
+
+                    // Reset form
+                    form.reset();
+
+                    // Scroll to top of form
+                    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                } else {
+                    throw new Error(result.message || 'Submission failed. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('Form submission error:', error);
+                showNotification('error', error.message || 'Sorry, there was an error submitting your form. Please try again later.');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.classList.remove('opacity-75');
+            }
         });
+
+        // Notification system
+        function showNotification(type, message) {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-20 left-4 right-4 sm:right-4 sm:left-auto z-50 p-4 rounded-lg shadow-lg max-w-md sm:max-w-sm mx-auto sm:mx-0 transform translate-y-full sm:translate-y-0 sm:translate-x-full transition-all duration-300 ${type === 'success'
+                ? 'bg-green-500 text-white'
+                : 'bg-red-500 text-white'
+                }`;
+
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-3"></i>
+                    <div class="flex-1">
+                        <div class="font-semibold">${type === 'success' ? 'Success!' : 'Error'}</div>
+                        <div class="text-sm opacity-90">${message}</div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-y-full', 'translate-x-full');
+            }, 100);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.add('translate-y-full', 'translate-x-full');
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
 
         // Add some initial animation triggers
         setTimeout(() => {
