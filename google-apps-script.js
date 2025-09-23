@@ -6,20 +6,56 @@ function doPost(e) {
         // Get the active spreadsheet
         const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
+        // Log the raw request for debugging
+        console.log('Raw postData:', e.postData);
+        console.log('Parameter data:', e.parameter);
+        console.log('Content type:', e.postData ? e.postData.type : 'No postData');
+
         // Parse the form data - handle both JSON and form data
         let data;
-        if (e.postData.type === 'application/json') {
-            data = JSON.parse(e.postData.contents);
-        } else {
-            // Handle form data
+
+        // Check if we have parameter data (form submission)
+        if (e.parameter && Object.keys(e.parameter).length > 0) {
+            console.log('Using parameter data (form submission)');
             data = e.parameter;
+        }
+        // Check if we have JSON data
+        else if (e.postData && e.postData.contents) {
+            console.log('Attempting to parse JSON data');
+            try {
+                data = JSON.parse(e.postData.contents);
+                console.log('Successfully parsed JSON');
+            } catch (jsonError) {
+                console.error('JSON parse error:', jsonError);
+                console.log('Raw contents:', e.postData.contents);
+
+                // Try to parse as URL-encoded data
+                const urlParams = new URLSearchParams(e.postData.contents);
+                data = {};
+                for (const [key, value] of urlParams) {
+                    data[key] = value;
+                }
+                console.log('Parsed as URL-encoded data:', data);
+            }
+        }
+        else {
+            throw new Error('No data received in request');
         }
 
         // Log received data for debugging
-        console.log('Received data:', data);
+        console.log('Final parsed data:', data);
 
         // Validate required fields
         if (!data.fullName || !data.email || !data.department || !data.submissionType || !data.title || !data.description) {
+            console.error('Missing required fields:', {
+                fullName: !!data.fullName,
+                email: !!data.email,
+                department: !!data.department,
+                submissionType: !!data.submissionType,
+                title: !!data.title,
+                description: !!data.description
+            });
+
             return ContentService
                 .createTextOutput(JSON.stringify({
                     success: false,
@@ -31,6 +67,8 @@ function doPost(e) {
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(data.email)) {
+            console.error('Invalid email format:', data.email);
+
             return ContentService
                 .createTextOutput(JSON.stringify({
                     success: false,
@@ -43,7 +81,9 @@ function doPost(e) {
         const lastRow = sheet.getLastRow();
         const nextRow = lastRow + 1;
 
-        // Prepare the data to insert
+        console.log('Inserting data into row:', nextRow);
+
+        // Prepare the data to insert (matching your sheet columns)
         const timestamp = new Date();
         const rowData = [
             nextRow - 1, // NO (auto-increment)
@@ -54,17 +94,14 @@ function doPost(e) {
             data.title,
             data.description,
             data.tags || '',
-            data.attachments || '', // Will be handled separately for file uploads
-            timestamp,
-            'Pending', // Status
-            '', // Points (to be assigned later)
-            '', // Reviewer
-            '', // Review Date
-            '' // Notes
+            data.attachments || '' // Will be handled separately for file uploads
         ];
+
+        console.log('Row data to insert:', rowData);
 
         // Insert the data into the sheet
         sheet.getRange(nextRow, 1, 1, rowData.length).setValues([rowData]);
+        console.log('Data inserted successfully');
 
         // Format the new row
         const range = sheet.getRange(nextRow, 1, 1, rowData.length);
@@ -85,12 +122,14 @@ function doPost(e) {
     } catch (error) {
         // Log the error
         console.error('Form submission error:', error);
+        console.error('Error stack:', error.stack);
 
         // Send error response
         return ContentService
             .createTextOutput(JSON.stringify({
                 success: false,
-                message: 'Sorry, there was an error submitting your form. Please try again later.'
+                message: 'Sorry, there was an error submitting your form. Please try again later.',
+                error: error.toString()
             }))
             .setMimeType(ContentService.MimeType.JSON);
     }
