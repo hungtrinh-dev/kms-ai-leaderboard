@@ -152,49 +152,252 @@ function doGet(e) {
     }
 }
 
-// Function to get leaderboard data (for future use)
-function getLeaderboardData() {
+// Function to get individual leaderboard data from the specific sheet
+function getIndividualLeaderboardData() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // Try to get the specific leaderboard sheet
+    let sheet;
     try {
-        const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-        const data = sheet.getDataRange().getValues();
-
-        // Skip header row
-        const submissions = data.slice(1);
-
-        // Calculate individual leaderboard
-        const individualStats = {};
-        submissions.forEach(row => {
-            const [no, fullName, email, department, submissionType, title, description, tags, attachments, timestamp, status, points] = row;
-
-            if (status === 'Approved' && points) {
-                const key = `${fullName} (${email})`;
-                if (!individualStats[key]) {
-                    individualStats[key] = {
-                        name: fullName,
-                        email: email,
-                        department: department,
-                        points: 0,
-                        submissions: 0
-                    };
-                }
-                individualStats[key].points += parseInt(points) || 0;
-                individualStats[key].submissions += 1;
-            }
-        });
-
-        // Convert to array and sort by points
-        const individualLeaderboard = Object.values(individualStats)
-            .sort((a, b) => b.points - a.points);
-
-        return {
-            individual: individualLeaderboard,
-            lastUpdated: new Date()
-        };
-
-    } catch (error) {
-        console.error('Error getting leaderboard data:', error);
-        return { error: 'Failed to load leaderboard data' };
+      // Look for the "Leaderboard by Individual" sheet or similar
+      sheet = spreadsheet.getSheetByName('Leaderboard by Individual') || 
+              spreadsheet.getSheetByName('AI for Everyone') ||
+              spreadsheet.getSheetByName('Leaderboard') || 
+              spreadsheet.getActiveSheet();
+    } catch (e) {
+      sheet = spreadsheet.getActiveSheet();
     }
+    
+    console.log('Using sheet for individual:', sheet.getName());
+    
+    // Get data from specific range (A1:G) to match your structure
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      console.log('No data rows found (only header or empty sheet)');
+      return {
+        success: true,
+        individual: [],
+        message: 'No leaderboard entries yet',
+        lastUpdated: new Date().toISOString(),
+        totalEntries: 0
+      };
+    }
+    
+    const range = sheet.getRange(1, 1, lastRow, 7); // Columns A-G
+    const data = range.getValues();
+    
+    console.log('Raw data from sheet (first 5 rows):', data.slice(0, 5));
+    
+    // Skip header row and process data
+    const rows = data.slice(1).filter(row => {
+      // Filter out empty rows - must have No, Full Name, Function, and Points
+      return row[0] && row[2] && row[3] && (row[6] || row[6] === 0);
+    });
+    
+    console.log('Filtered rows count:', rows.length);
+    console.log('Sample filtered row:', rows[0]);
+    
+    // Map the data according to your sheet structure
+    const leaderboardData = rows.map((row, index) => {
+      const points = parseInt(row[6]) || 0;
+      return {
+        rank: index + 1,
+        no: row[0] ? row[0].toString() : '',
+        id: row[1] ? row[1].toString() : '',
+        fullName: row[2] ? row[2].toString() : 'Unknown',
+        function: row[3] ? row[3].toString() : 'Unknown',
+        subDepartment: row[4] ? row[4].toString() : '',
+        account: row[5] ? row[5].toString() : row[2] ? row[2].toString() : 'N/A',
+        points: points,
+        pointsPerTeamSize: points // You can modify this calculation as needed
+      };
+    }).sort((a, b) => b.points - a.points); // Sort by points descending
+    
+    console.log('Processed individual leaderboard data:', leaderboardData.slice(0, 3));
+    
+    return {
+      success: true,
+      individual: leaderboardData,
+      lastUpdated: new Date().toISOString(),
+      totalEntries: leaderboardData.length,
+      sheetName: sheet.getName()
+    };
+    
+  } catch (error) {
+    console.error('Error getting individual leaderboard data:', error);
+    console.error('Error stack:', error.stack);
+    return {
+      success: false,
+      error: error.toString(),
+      message: 'Failed to load individual leaderboard data: ' + error.message
+    };
+  }
+}
+
+// Function to get team leaderboard data from "Leaderboard by Account/Department" sheet
+function getTeamLeaderboardData() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // Get the "Leaderboard by Account/Department" sheet
+    let sheet;
+    try {
+      sheet = spreadsheet.getSheetByName('Leaderboard by Account/Department');
+      if (!sheet) {
+        sheet = spreadsheet.getSheetByName('Leaderboard by Account') ||
+                spreadsheet.getSheetByName('Team Leaderboard') ||
+                spreadsheet.getActiveSheet();
+      }
+    } catch (e) {
+      sheet = spreadsheet.getActiveSheet();
+    }
+    
+    console.log('Using sheet for teams:', sheet.getName());
+    
+    // Get data from specific range - columns A through G based on your sheet structure
+    // Columns: No, Function, Sub-department, Account, Accumulated Points, Team size, Accumulated based on FTE only
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      console.log('No team data rows found (only header or empty sheet)');
+      return {
+        success: true,
+        team: [],
+        message: 'No team leaderboard entries yet',
+        lastUpdated: new Date().toISOString(),
+        totalEntries: 0
+      };
+    }
+    
+    const range = sheet.getRange(1, 1, lastRow, 7); // Columns A-G
+    const data = range.getValues();
+    
+    console.log('Raw team data from sheet (first 5 rows):', data.slice(0, 5));
+    
+    // Skip header row and process data
+    const rows = data.slice(1).filter(row => {
+      // Filter out empty rows - must have No, Function, Account, and Points
+      return row[0] && row[1] && row[3] && (row[4] || row[4] === 0) && row[5];
+    });
+    
+    console.log('Filtered team rows count:', rows.length);
+    console.log('Sample filtered team row:', rows[0]);
+    
+    // Map the data according to team sheet structure
+    const teamLeaderboardData = rows.map((row, index) => {
+      const points = parseInt(row[4]) || 0; // Accumulated Points
+      const teamSize = parseInt(row[5]) || 1; // Team size
+      
+      return {
+        rank: index + 1,
+        no: row[0] ? row[0].toString() : '',
+        function: row[1] ? row[1].toString() : 'Unknown',
+        subDepartment: row[2] ? row[2].toString() : '',
+        program: row[2] ? row[2].toString() : '', // Sub-department (Program)
+        account: row[3] ? row[3].toString() : 'Unknown',
+        accumulatedPoints: points,
+        teamSize: teamSize,
+        pointsPerTeamMember: teamSize > 0 ? (points / teamSize).toFixed(2) : points,
+        accumulatedBasedOnFTE: row[6] ? row[6].toString() : ''
+      };
+    }).sort((a, b) => b.accumulatedPoints - a.accumulatedPoints); // Sort by accumulated points descending
+    
+    console.log('Processed team leaderboard data:', teamLeaderboardData.slice(0, 3));
+    
+    return {
+      success: true,
+      team: teamLeaderboardData,
+      lastUpdated: new Date().toISOString(),
+      totalEntries: teamLeaderboardData.length,
+      sheetName: sheet.getName()
+    };
+    
+  } catch (error) {
+    console.error('Error getting team leaderboard data:', error);
+    console.error('Error stack:', error.stack);
+    return {
+      success: false,
+      error: error.toString(),
+      message: 'Failed to load team leaderboard data: ' + error.message
+    };
+  }
+}
+
+// Function to get both individual and team leaderboard data
+function getLeaderboardData() {
+  try {
+    const individualResult = getIndividualLeaderboardData();
+    const teamResult = getTeamLeaderboardData();
+    
+    return {
+      success: individualResult.success && teamResult.success,
+      individual: individualResult.individual || [],
+      team: teamResult.team || [],
+      lastUpdated: new Date().toISOString(),
+      messages: {
+        individual: individualResult.message,
+        team: teamResult.message
+      },
+      totalEntries: {
+        individual: individualResult.totalEntries || 0,
+        team: teamResult.totalEntries || 0
+      },
+      sheetNames: {
+        individual: individualResult.sheetName,
+        team: teamResult.sheetName
+      }
+    };
+    
+  } catch (error) {
+    console.error('Error getting combined leaderboard data:', error);
+    return {
+      success: false,
+      error: error.toString(),
+      message: 'Failed to load leaderboard data: ' + error.message
+    };
+  }
+}
+
+// Handle GET requests for leaderboard data
+function doGet(e) {
+  // Handle GET requests (for testing) and leaderboard data requests
+  if (e.parameter && e.parameter.action === 'getLeaderboard') {
+    console.log('Leaderboard data requested');
+    const leaderboardData = getLeaderboardData();
+    
+    // Check if JSONP callback is requested
+    if (e.parameter.callback) {
+      console.log('JSONP callback requested:', e.parameter.callback);
+      const jsonpResponse = e.parameter.callback + '(' + JSON.stringify(leaderboardData) + ');';
+      
+      return ContentService
+        .createTextOutput(jsonpResponse)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      // Regular JSON response
+      return ContentService
+        .createTextOutput(JSON.stringify(leaderboardData))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+  
+  // Handle form submissions via GET (for iframe method)
+  if (e.parameter && Object.keys(e.parameter).length > 1) {
+    return doPost(e);
+  }
+  
+  // Default API status response
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      message: 'KMS AI Tips API is running!',
+      timestamp: new Date(),
+      endpoints: {
+        submit: 'POST /',
+        leaderboard: 'GET /?action=getLeaderboard',
+        leaderboardJsonp: 'GET /?action=getLeaderboard&callback=yourCallback'
+      }
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 // Function to test the script
