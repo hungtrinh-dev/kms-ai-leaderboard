@@ -84,6 +84,23 @@
             color: white;
         }
 
+        /* Search Styles */
+        .search-container {
+            transition: all 0.3s ease;
+        }
+
+        .search-input-focused {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(39, 170, 225, 0.2);
+        }
+
+        .search-result-highlight {
+            background-color: rgba(251, 191, 36, 0.3);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
         .reward-card {
             background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
             border-radius: 20px;
@@ -1808,6 +1825,43 @@
                 </div>
             </div>
 
+            <!-- Search Section -->
+            <div class="mb-6 sm:mb-8 fade-in">
+                <div class="max-w-md mx-auto relative">
+                    <!-- Individual Search Input -->
+                    <div id="individualSearchContainer" class="search-container">
+                        <div class="relative">
+                            <input type="text" id="individualSearch" placeholder="Search by ID or Full Name..." 
+                                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#27aae1] focus:border-transparent shadow-md transition-all duration-300">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <button id="clearIndividualSearch" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden transition-all duration-300">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 text-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Search by Employee ID or Full Name
+                        </div>
+                    </div>
+
+                    <!-- Team Search Input -->
+                    <div id="teamSearchContainer" class="search-container hidden">
+                        <div class="relative">
+                            <input type="text" id="teamSearch" placeholder="Search by Account..." 
+                                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#27aae1] focus:border-transparent shadow-md transition-all duration-300">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <button id="clearTeamSearch" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden transition-all duration-300">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 text-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Search by Team Account Email
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Podium Section -->
             <div id="leaderboardPodium" class="leaderboard-podium">
                 <div class="podium-section fade-in">
@@ -2010,6 +2064,8 @@
             const teamTab = document.getElementById('teamTab');
             const individualBoard = document.getElementById('individualLeaderboard');
             const teamBoard = document.getElementById('teamLeaderboard');
+            const individualSearchContainer = document.getElementById('individualSearchContainer');
+            const teamSearchContainer = document.getElementById('teamSearchContainer');
 
             if (tabType === 'individual') {
                 individualTab.classList.add('tab-active');
@@ -2018,6 +2074,13 @@
                 teamTab.classList.add('text-gray-600');
                 individualBoard.classList.remove('hidden');
                 teamBoard.classList.add('hidden');
+                individualSearchContainer.classList.remove('hidden');
+                teamSearchContainer.classList.add('hidden');
+                
+                // Clear any existing search
+                document.getElementById('individualSearch').value = '';
+                currentSearchQuery.individual = '';
+                document.getElementById('clearIndividualSearch').classList.add('hidden');
                 
                 // Load individual data if not cached
                 if (cachedLeaderboardData.individual && cachedLeaderboardData.individual.length > 0) {
@@ -2030,6 +2093,13 @@
                 individualTab.classList.add('text-gray-600');
                 teamBoard.classList.remove('hidden');
                 individualBoard.classList.add('hidden');
+                teamSearchContainer.classList.remove('hidden');
+                individualSearchContainer.classList.add('hidden');
+                
+                // Clear any existing search
+                document.getElementById('teamSearch').value = '';
+                currentSearchQuery.team = '';
+                document.getElementById('clearTeamSearch').classList.add('hidden');
                 
                 // Load team data if not cached
                 if (cachedLeaderboardData.team && cachedLeaderboardData.team.length > 0) {
@@ -2099,6 +2169,12 @@
         let cachedLeaderboardData = {
             individual: null,
             team: null
+        };
+
+        // Global variables for search functionality
+        let currentSearchQuery = {
+            individual: '',
+            team: ''
         };
 
         // Notification system
@@ -2624,8 +2700,14 @@
             `;
 
             if (leaderboardData.length === 0) {
-                // Use the dedicated empty state function
-                displayEmptyLeaderboard(isTeamData);
+                // Check if this is due to a search filter
+                const currentQuery = isTeamData ? currentSearchQuery.team : currentSearchQuery.individual;
+                if (currentQuery) {
+                    displayNoSearchResults(isTeamData, currentQuery);
+                } else {
+                    // Use the dedicated empty state function
+                    displayEmptyLeaderboard(isTeamData);
+                }
                 return;
             } else {
                 leaderboardData.forEach((entry, index) => {
@@ -2646,21 +2728,26 @@
 
                     if (isTeamData) {
                         // Team leaderboard row
+                        const highlightedAccount = highlightSearchTerms(entry.account || 'Unknown', currentSearchQuery.team);
+                        
                         html += `
                             <div class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
                                 <div class="font-medium">${entry.no || index + 1}</div>
                                 <div class="font-medium truncate">${entry.function || 'Unknown'}</div>
-                                <div class="truncate">${entry.account || 'Unknown'}</div>
+                                <div class="truncate">${highlightedAccount}</div>
                                 <div class="font-semibold ${pointsColorClass}">${entry.accumulatedPoints || 0}</div>
                             </div>
                         `;
                     } else {
                         // Individual leaderboard row
+                        const highlightedId = highlightSearchTerms(entry.id || 'N/A', currentSearchQuery.individual);
+                        const highlightedName = highlightSearchTerms(entry.fullName || 'N/A', currentSearchQuery.individual);
+                        
                         html += `
                             <div class="grid grid-cols-6 gap-2 sm:gap-4 p-3 sm:p-4 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
                                 <div class="font-medium">${index + 1}</div>
-                                <div class="font-medium truncate">${entry.id || 'N/A'}</div>
-                                <div class="font-medium truncate">${entry.fullName || 'N/A'}</div>
+                                <div class="font-medium truncate">${highlightedId}</div>
+                                <div class="font-medium truncate">${highlightedName}</div>
                                 <div class="truncate">${entry.account || 'N/A'}</div>
                                 <div class="font-medium truncate">${entry.function || 'N/A'}</div>
                                 <div class="font-semibold ${pointsColorClass}">${entry.points}</div>
@@ -2702,9 +2789,225 @@
         }
 
 
+        // Highlight search terms in text
+        function highlightSearchTerms(text, query) {
+            if (!query || !text) return text;
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="search-result-highlight">$1</span>');
+        }
+
+        // Display no search results state
+        function displayNoSearchResults(isTeamData, query) {
+            const individualBoard = document.getElementById('individualLeaderboard');
+            const teamBoard = document.getElementById('teamLeaderboard');
+            const displayBoard = isTeamData ? teamBoard : individualBoard;
+            
+            // Update podium for no search results
+            renderPodium({ first: null, second: null, third: null });
+
+            const searchCriteria = isTeamData ? 'Account' : 'ID or Full Name';
+            const resultType = isTeamData ? 'teams' : 'individuals';
+
+            const noResultsHtml = `
+                <!-- Table Header -->
+                <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
+                    <div class="grid ${isTeamData ? 'grid-cols-4' : 'grid-cols-6'} gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
+                        ${isTeamData ? 
+                            '<div class="text-center text-white/80">No</div><div class="text-center text-white/80">Function/Program</div><div class="text-center text-white/80">Account</div><div class="text-center text-white">Accumulated Points</div>' :
+                            '<div class="text-center text-white/80">No</div><div class="text-center text-white/80">Id</div><div class="text-center text-white/80">Fullname</div><div class="text-center text-white/80">Account</div><div class="text-center text-white/80">Function</div><div class="text-center text-white">Points</div>'
+                        }
+                    </div>
+                </div>
+                <!-- Scrollable Table Body -->
+                <div class="max-h-[500px] overflow-y-auto bg-white">
+                    <div class="p-4">
+                        <div class="text-center py-16 bg-gray-50/30">
+                            <div class="text-6xl mb-6 opacity-30">🔍</div>
+                            <h3 class="text-xl font-bold text-gray-600 mb-4">No Results Found</h3>
+                            <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                                No ${resultType} found matching "<span class="search-result-highlight font-medium">${query}</span>" in ${searchCriteria.toLowerCase()}
+                            </p>
+                            <div class="space-y-2">
+                                <button onclick="document.getElementById('${isTeamData ? 'teamSearch' : 'individualSearch'}').focus();" 
+                                        class="inline-block bg-gray-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 mr-2">
+                                    <i class="fas fa-search mr-2"></i>Try Different Search
+                                </button>
+                                <button onclick="clearSearch('${isTeamData ? 'team' : 'individual'}');" 
+                                        class="inline-block bg-gradient-to-r from-[#27aae1] to-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                                    <i class="fas fa-times mr-2"></i>Clear Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            displayBoard.innerHTML = noResultsHtml;
+        }
+
+        // Clear search function
+        function clearSearch(type) {
+            if (type === 'individual') {
+                const searchInput = document.getElementById('individualSearch');
+                const clearButton = document.getElementById('clearIndividualSearch');
+                if (searchInput) {
+                    searchInput.value = '';
+                    currentSearchQuery.individual = '';
+                }
+                if (clearButton) {
+                    clearButton.classList.add('hidden');
+                }
+                filterLeaderboard('individual');
+            } else {
+                const searchInput = document.getElementById('teamSearch');
+                const clearButton = document.getElementById('clearTeamSearch');
+                if (searchInput) {
+                    searchInput.value = '';
+                    currentSearchQuery.team = '';
+                }
+                if (clearButton) {
+                    clearButton.classList.add('hidden');
+                }
+                filterLeaderboard('team');
+            }
+        }
+
+        // Search functionality
+        function initializeSearchFunctionality() {
+            const individualSearch = document.getElementById('individualSearch');
+            const teamSearch = document.getElementById('teamSearch');
+            const clearIndividualSearch = document.getElementById('clearIndividualSearch');
+            const clearTeamSearch = document.getElementById('clearTeamSearch');
+
+            // Individual search event listeners
+            if (individualSearch) {
+                individualSearch.addEventListener('input', function(e) {
+                    currentSearchQuery.individual = e.target.value.toLowerCase().trim();
+                    
+                    // Show/hide clear button
+                    if (currentSearchQuery.individual) {
+                        clearIndividualSearch.classList.remove('hidden');
+                    } else {
+                        clearIndividualSearch.classList.add('hidden');
+                    }
+                    
+                    // Filter individual leaderboard
+                    filterLeaderboard('individual');
+                });
+
+                individualSearch.addEventListener('focus', function(e) {
+                    e.target.parentElement.classList.add('search-input-focused');
+                });
+
+                individualSearch.addEventListener('blur', function(e) {
+                    e.target.parentElement.classList.remove('search-input-focused');
+                });
+            }
+
+            // Team search event listeners
+            if (teamSearch) {
+                teamSearch.addEventListener('input', function(e) {
+                    currentSearchQuery.team = e.target.value.toLowerCase().trim();
+                    
+                    // Show/hide clear button
+                    if (currentSearchQuery.team) {
+                        clearTeamSearch.classList.remove('hidden');
+                    } else {
+                        clearTeamSearch.classList.add('hidden');
+                    }
+                    
+                    // Filter team leaderboard
+                    filterLeaderboard('team');
+                });
+
+                teamSearch.addEventListener('focus', function(e) {
+                    e.target.parentElement.classList.add('search-input-focused');
+                });
+
+                teamSearch.addEventListener('blur', function(e) {
+                    e.target.parentElement.classList.remove('search-input-focused');
+                });
+            }
+
+            // Clear search event listeners
+            if (clearIndividualSearch) {
+                clearIndividualSearch.addEventListener('click', function() {
+                    clearSearch('individual');
+                });
+            }
+
+            if (clearTeamSearch) {
+                clearTeamSearch.addEventListener('click', function() {
+                    clearSearch('team');
+                });
+            }
+        }
+
+        // Filter leaderboard data based on search query
+        function filterLeaderboard(type) {
+            const data = type === 'individual' ? cachedLeaderboardData.individual : cachedLeaderboardData.team;
+            const query = type === 'individual' ? currentSearchQuery.individual : currentSearchQuery.team;
+            
+            if (!data) return;
+
+            let filteredData = data;
+            
+            if (query) {
+                filteredData = data.filter(item => {
+                    if (type === 'individual') {
+                        // Search by ID or Full Name
+                        const idMatch = item.id ? item.id.toLowerCase().includes(query) : false;
+                        const nameMatch = item.fullName ? item.fullName.toLowerCase().includes(query) : false;
+                        return idMatch || nameMatch;
+                    } else {
+                        // Search by Account
+                        return item.account ? item.account.toLowerCase().includes(query) : false;
+                    }
+                });
+            }
+
+            // Display filtered data
+            displayLeaderboardData(filteredData, type === 'team');
+        }
+
+        // Highlight search results
+        function highlightSearchResult(element, query, dataType) {
+            if (!query) return element;
+
+            const searchIn = dataType === 'individual' ? 
+                [element.querySelector('.rank-number')?.textContent || '', 
+                 element.querySelector('.performer-name')?.textContent || ''] :
+                [element.querySelector('.rank-number')?.textContent || '',
+                 element.querySelector('.performer-details')?.textContent || ''];
+
+            let highlighted = false;
+            
+            searchIn.forEach((text, index) => {
+                if (text && text.toLowerCase().includes(query.toLowerCase())) {
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    const highlightedText = text.replace(regex, '<span class="search-result-highlight">$1</span>');
+                    
+                    if (index === 0 && dataType === 'individual') {
+                        // Highlight in rank number or ID
+                        const rankElement = element.querySelector('.rank-number');
+                        if (rankElement) rankElement.innerHTML = highlightedText;
+                    } else if (index === 1) {
+                        // Highlight in name or account
+                        const nameElement = element.querySelector('.performer-name');
+                        if (nameElement) nameElement.innerHTML = highlightedText;
+                    }
+                    
+                    highlighted = true;
+                }
+            });
+
+            return highlighted;
+        }
+
         // Load leaderboard data when page loads
         document.addEventListener('DOMContentLoaded', function () {
-
+            // Initialize search functionality
+            initializeSearchFunctionality();
 
             // Load leaderboard data after a short delay to ensure page is ready
             setTimeout(() => {
