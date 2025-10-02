@@ -1091,7 +1091,7 @@
             }
 
             .emblem-third .emblem-icon {
-                font-size: 1.25rem;
+                font-size: 1.75rem;
             }
 
             .rank-number {
@@ -1118,6 +1118,74 @@
 
             .podium-text-box {
                 padding: 0.5rem 0.75rem;
+            }
+        }
+
+        /* Hero Image Styles */
+        .hero-image-container {
+            position: relative;
+            transform-origin: center;
+        }
+
+        .hero-image-glow {
+            position: relative;
+            border-radius: 1rem;
+            padding: 8px;
+        }
+
+
+        .hero-image {
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            z-index: 1;
+            position: relative;
+            animation: hero-image-float 6s ease-in-out infinite;
+        }
+
+
+
+
+        @keyframes hero-image-float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-5px) rotate(0.5deg);
+            }
+
+            50% {
+                transform: translateY(-8px) rotate(0deg);
+            }
+
+            75% {
+                transform: translateY(-3px) rotate(-0.5deg);
+            }
+        }
+
+
+        /* Hero responsive adjustments */
+        @media (max-width: 1024px) {
+            .hero-image {
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-image-glow {
+                padding: 4px;
+            }
+
+            .hero-image {
+                max-width: 400px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-image {
+                max-width: 350px;
             }
         }
     </style>
@@ -1222,31 +1290,45 @@
         </div>
 
         <div class="container mx-auto px-4 sm:px-6 relative z-10 w-full">
-            <div class="text-center text-white max-w-6xl mx-auto">
-                <div class="fade-in">
-                    <h1
-                        class="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-relaxed">
-                        AI FOR EVERYONE
-                        <div class="hero-tagline mt-1 sm:mt-2 pb-2">
-                            <p class="hero-tagline-text text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
-                                Community-driven Initiative<br>
-                                <span class="text-xl sm:text-2xl md:text-3xl lg:text-4xl">Small tips, Big impact</span>
-                            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-7xl mx-auto">
+                <!-- Left Side: Hero Info -->
+                <div class="text-white text-left lg:text-left">
+                    <div class="fade-in">
+                        <h1
+                            class="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-relaxed">
+                            AI FOR EVERYONE
+                            <div class="hero-tagline mt-1 sm:mt-2 pb-2">
+                                <p class="hero-tagline-text text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
+                                    Community-driven Initiative<br>
+                                    <span class="text-xl sm:text-2xl md:text-3xl lg:text-4xl">Small tips, Big
+                                        impact</span>
+                                </p>
+                            </div>
+                        </h1>
+                    </div>
+                    <div class="fade-in" style="animation-delay: 0.2s;">
+                        <p class="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 leading-relaxed">
+                            Join KMS Technology's community-driven initiative to share AI tips, automation hacks,
+                            and daily work enhancements
+                        </p>
+                    </div>
+                    <div class="fade-in" style="animation-delay: 0.4s;">
+                        <button onclick="scrollToSection('program')"
+                            class="bg-white text-[#27aae1] px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            Explore Program <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Side: Hero Image -->
+                <div class="fade-in flex justify-center lg:justify-end" style="animation-delay: 0.3s;">
+                    <div class="hero-image-container relative">
+                        <div class="hero-image-glow">
+                            <img src="https://res.cloudinary.com/dawbc3ysp/image/upload/v1759405305/kms-ai-taskforce/kms-ai-image_ilk6jq.webp"
+                                alt="AI Innovation"
+                                class="hero-image w-full max-w-lg lg:max-w-xl xl:max-w-2xl h-auto rounded-2xl">
                         </div>
-                    </h1>
-                </div>
-                <div class="fade-in" style="animation-delay: 0.2s;">
-                    <p
-                        class="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
-                        Join KMS Technology's community-driven initiative to share AI tips, automation hacks,
-                        and daily work enhancements
-                    </p>
-                </div>
-                <div class="fade-in" style="animation-delay: 0.4s;">
-                    <button onclick="scrollToSection('program')"
-                        class="bg-white text-[#27aae1] px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg">
-                        Explore Program <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1361,10 +1443,12 @@
                 </div>
             </div>
 
+
             <!-- Process Flow Diagram -->
             <div class="max-w-7xl mx-auto fade-in">
                 <div class="relative bg-white rounded-2xl p-8 sm:p-12 shadow-xl overflow-visible"
                     style="min-height: 800px;">
+
 
                     <!-- Left Column: Process Categories (Swimlanes) -->
                     <div class="absolute left-8 top-24 space-y-20 lg:space-y-24 hidden lg:block">
@@ -1547,6 +1631,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- Call to Action -->
             <div class="mt-12 sm:mt-16 fade-in">
@@ -1803,10 +1888,6 @@
                 <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4 mb-6">
                     See how you rank among your peers and celebrate top contributors
                 </p>
-                <button onclick="loadLeaderboardData()"
-                    class="bg-gradient-to-r from-[#27aae1] to-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105">
-                    <i class="fas fa-sync-alt mr-2"></i>Refresh Data
-                </button>
             </div>
 
             <!-- Leaderboard Tabs -->
@@ -1822,47 +1903,6 @@
                         onclick="switchTab('team')">
                         Team
                     </button>
-                </div>
-            </div>
-
-            <!-- Search Section -->
-            <div class="mb-6 sm:mb-8 fade-in">
-                <div class="max-w-md mx-auto relative">
-                    <!-- Individual Search Input -->
-                    <div id="individualSearchContainer" class="search-container">
-                        <div class="relative">
-                            <input type="text" id="individualSearch" placeholder="Search by ID or Full Name..."
-                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#27aae1] focus:border-transparent shadow-md transition-all duration-300">
-                            <i
-                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <button id="clearIndividualSearch"
-                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden transition-all duration-300">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-500 text-center">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Search by Employee ID or Full Name
-                        </div>
-                    </div>
-
-                    <!-- Team Search Input -->
-                    <div id="teamSearchContainer" class="search-container hidden">
-                        <div class="relative">
-                            <input type="text" id="teamSearch" placeholder="Search by Account..."
-                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#27aae1] focus:border-transparent shadow-md transition-all duration-300">
-                            <i
-                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <button id="clearTeamSearch"
-                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden transition-all duration-300">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-500 text-center">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Search by Team Account Email
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1921,49 +1961,102 @@
             </div>
 
             <!-- Leaderboard Table -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden fade-in">
-                <div class="overflow-x-auto">
-                    <!-- Individual Leaderboard -->
-                    <div id="individualLeaderboard" class="leaderboard-content">
-                        <!-- Table Header -->
-                        <div
-                            class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                            <div class="grid grid-cols-6 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
-                                <div class="text-white/80">No</div>
-                                <div class="text-white/80">Id</div>
-                                <div class="text-white/80">Fullname</div>
-                                <div class="text-white/80">Account</div>
-                                <div class="text-white/80">Function</div>
-                                <div class="text-center text-white">Points</div>
+
+            <!-- Search Section -->
+            <div class="flex gap-4 items-center justify-between mb-10 flex-col md:flex-row flex-col-reverse ">
+                <div class="fade-in w-full md:w-auto">
+                    <div class="w-full lg:max-w-md relative">
+                        <!-- Individual Search Input -->
+                        <div id="individualSearchContainer" class="search-container">
+                            <div class="relative">
+                                <input type="text" id="individualSearch" placeholder="Search by ID or Full Name..."
+                                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#27aae1] focus:border-transparent shadow-md transition-all duration-300 w-full md:min-w-[440px]">
+                                <i
+                                    class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <button id="clearIndividualSearch"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden transition-all duration-300">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
                             </div>
                         </div>
-                        <!-- Scrollable Table Body -->
-                        <div class="max-h-[500px] overflow-y-auto bg-white">
+
+                        <!-- Team Search Input -->
+                        <div id="teamSearchContainer" class="search-container hidden">
+
+                            <div class="relative">
+                                <input type="text" id="teamSearch" placeholder="Search by Sub-department, Account..."
+                                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#27aae1] focus:border-transparent shadow-md transition-all duration-300 w-full md:min-w-[440px]">
+                                <i
+                                    class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <button id="clearTeamSearch"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden transition-all duration-300">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="loadLeaderboardData()"
+                    class="bg-gradient-to-r from-[#27aae1] to-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105 w-[180px]">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh Data
+                </button>
+            </div>
+            <!-- End Search Section -->
+
+            <!-- Leaderboard Table -->
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden fade-in">
+                <div>
+                    <!-- Individual Leaderboard -->
+                    <div id="individualLeaderboard" class="leaderboard-content">
+                        <!-- Scrollable Container with Header -->
+                        <div class="overflow-x-auto max-h-[500px] overflow-y-auto bg-white">
+                            <!-- Table Header -->
+                            <div
+                                class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-3 sm:p-4 sticky top-0 z-10 shadow-lg min-w-[650px]">
+                                <div class="grid grid-cols-12 gap-1 sm:gap-2 font-bold text-xs sm:text-sm">
+                                    <div class="col-span-1 text-white/80 text-center w-8">No</div>
+                                    <div class="col-span-1 text-white/80 text-center w-10">ID</div>
+                                    <div class="col-span-2 text-white/80 truncate">Fullname</div>
+                                    <div class="col-span-3 text-white/80 truncate">Account</div>
+                                    <div class="col-span-2 text-white/80 truncate">Function</div>
+                                    <div class="col-span-2 text-white/80 truncate">Sub-department (Program)</div>
+                                    <div class="col-span-1 text-center text-white w-16">Points</div>
+                                </div>
+                            </div>
+                            <!-- Table Body -->
                             <div class="p-4">
-                                <div class="space-y-3 min-w-[600px] bg-gray-50/30"> </div>
+                                <div class="space-y-3 min-w-[650px] bg-gray-50/30"> </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Team Leaderboard -->
                     <div id="teamLeaderboard" class="leaderboard-content hidden">
-                        <div
-                            class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                            <div class="grid grid-cols-4 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
-                                <div class="text-white/80">No</div>
-                                <div class="text-white/80">Function/Program</div>
-                                <div class="text-white/80">Account</div>
-                                <div class="text-center text-white">Accumulated Points</div>
+                        <!-- Scrollable Container with Header -->
+                        <div class="overflow-x-auto max-h-[500px] overflow-y-auto bg-white">
+                            <!-- Table Header -->
+                            <div
+                                class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-3 sm:p-4 sticky top-0 z-10 shadow-lg min-w-[900px]">
+                                <div class="grid grid-cols-12 gap-1 sm:gap-2 font-bold text-xs sm:text-sm">
+                                    <div class="col-span-1 text-white/80 text-center w-8">No</div>
+                                    <div class="col-span-2 text-white/80 truncate">Function</div>
+                                    <div class="col-span-2 text-white/80 truncate">Sub-department (Program)</div>
+                                    <div class="col-span-2 text-white/80 truncate">Account</div>
+                                    <div class="col-span-1 text-white/80 text-center w-16">Accumulated Points</div>
+                                    <div class="col-span-1 text-white/80 text-center w-12">Team Size</div>
+                                    <div class="col-span-3 text-white/80 text-center">Accumulated Points per Employee
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="max-h-[500px] overflow-y-auto bg-white">
+                            <!-- Table Body -->
                             <div class="p-4">
-                                <div class="space-y-3 min-w-[600px] bg-gray-50/30"></div>
+                                <div class="space-y-3 min-w-[900px] bg-gray-50/30"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- End Leaderboard Table -->
     </section>
 
     <!-- Footer -->
@@ -2044,9 +2137,9 @@
                 currentSearchQuery.individual = '';
                 document.getElementById('clearIndividualSearch').classList.add('hidden');
 
-                // Load individual data if not cached
+                // Load individual data if not cached (with podium update)
                 if (cachedLeaderboardData.individual && cachedLeaderboardData.individual.length > 0) {
-                    displayLeaderboardData(cachedLeaderboardData.individual, false);
+                    displayLeaderboardData(cachedLeaderboardData.individual, false, true);
                 }
             } else {
                 teamTab.classList.add('tab-active');
@@ -2063,9 +2156,9 @@
                 currentSearchQuery.team = '';
                 document.getElementById('clearTeamSearch').classList.add('hidden');
 
-                // Load team data if not cached
+                // Load team data if not cached (with podium update)
                 if (cachedLeaderboardData.team && cachedLeaderboardData.team.length > 0) {
-                    displayLeaderboardData(cachedLeaderboardData.team, true);
+                    displayLeaderboardData(cachedLeaderboardData.team, true, true);
                 }
             }
         }
@@ -2096,31 +2189,6 @@
                 });
             }
         });
-
-        // File upload handling
-        document.addEventListener('DOMContentLoaded', function () {
-            const fileInput = document.querySelector('input[type="file"]');
-            const uploadArea = fileInput.parentElement;
-
-            uploadArea.addEventListener('click', () => fileInput.click());
-
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('border-blue-400', 'bg-blue-50');
-            });
-
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
-            });
-
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
-                // Handle file drop logic here
-            });
-        });
-
-
 
 
         // Google Apps Script Integration
@@ -2290,13 +2358,28 @@
         // Manual data fallback function
         function tryManualDataFallback() {
             const manualData = [
-                { no: '1', id: '2246', fullName: 'Trinh Vũ Minh Hùng', function: 'Engineering', account: 'hungtrinh@kms-technology.com', points: 100 },
-                { no: '2', id: '2243', fullName: 'Nhi Ngô', function: 'HR', account: 'nhingo@kms-technology.com', points: 20 },
-                { no: '3', id: '2243', fullName: 'Nhi Ngô A', function: 'HR', account: 'nhingoA@kms-technology.com', points: 20 },
-                { no: '4', id: '2246', fullName: 'Trinh Vũ Minh A', function: 'Engineering', account: 'hungtrinh@kms-technology.com', points: 100 },
-                { no: '5', id: '2243', fullName: 'Nhi Ngô B', function: 'HR', account: 'nhingoB@kms-technology.com', points: 20 }
+                // Individual data
+                { no: '1', id: '2246', fullName: 'Trinh Vũ Minh Hùng', function: 'Engineering', subDepartment: 'LNI teams', account: 'hungtrink@kms-technology.com', points: 100 },
+                { no: '2', id: '2243', fullName: 'Nhi Ngô', function: 'HR', subDepartment: 'Grove HR', account: 'nhingo@kms-technology.com', points: 20 },
+                { no: '3', id: '2243', fullName: 'Nhi Ngô A', function: 'HR', subDepartment: 'Thanos teams', account: 'nhingoA@kms-technology.com', points: 20 },
+                { no: '4', id: '2246', fullName: 'Trinh Vũ Minh A', function: 'Engineering', subDepartment: 'Digital hands teams', account: 'hungtrinh@kms-technology.com', points: 100 },
+                { no: '5', id: '2243', fullName: 'Nhi Ngô B', function: 'Security', subDepartment: 'ABC Team', account: 'nhingoB@kms-technology.com', points: 20 },
+
+                // Team data
+                { no: '1', function: 'Engineering', subDepartment: 'ABC', account: 'hung.trinh@gmail.com', accumulatedPoints: 100, teamSize: 10, pointsPerEmployee: 10.0 },
+                { no: '2', function: 'BA', subDepartment: 'Kobiton', account: 'ba@gmail.com', accumulatedPoints: 20, teamSize: 8, pointsPerEmployee: 2.5 },
+                { no: '3', function: 'Testing', subDepartment: 'Def', account: 'testing@gmail.com', accumulatedPoints: 40, teamSize: 8, pointsPerEmployee: 5.0 },
+                { no: '4', function: 'Security', subDepartment: 'efg', account: 'security@gmail.com', accumulatedPoints: 50, teamSize: 7, pointsPerEmployee: 7.1 }
             ];
-            displayLeaderboardData(manualData);
+
+            // Parse and cache the data properly
+            const individualData = manualData.filter(item => item.id && item.fullName);
+            const teamData = manualData.filter(item => item.accumulatedPoints !== undefined && item.teamSize !== undefined);
+
+            cachedLeaderboardData.individual = individualData.sort((a, b) => b.points - a.points);
+            cachedLeaderboardData.team = teamData.sort((a, b) => (b.pointsPerEmployee || 0) - (a.pointsPerEmployee || 0));
+
+            displayLeaderboardData(individualData);
         }
 
         // Parse CSV data to leaderboard format
@@ -2313,8 +2396,8 @@
                     // Parse CSV line (handle commas in quoted strings)
                     const columns = parseCSVLine(line);
 
-                    // Map to your sheet structure: No, ID, Full Name, Function, Sub-department, Account, Points
-                    if (columns.length >= 7 && columns[0] && columns[2] && columns[3]) {
+                    // Map individual data: No, ID, Full Name, Function, Sub-department, Account, Points
+                    if (columns.length >= 7 && columns[0] && columns[2] && columns[3] && !isNaN(parseInt(columns[6]))) {
                         data.push({
                             no: columns[0],
                             id: columns[1],
@@ -2326,12 +2409,51 @@
                             pointsPerTeamSize: parseFloat(columns[6]) || 0
                         });
                     }
+
+                    // Map team data: No, Function, Sub-department, Account, Accumulated Points, Team Size, Points per Employee
+                    if (columns.length >= 7 && columns[0] && columns[1] && !isNaN(parseInt(columns[4])) && !isNaN(parseInt(columns[5])) && !isNaN(parseFloat(columns[6]))) {
+                        // Additional check: valid team data has numeric accumulated points
+                        const accumulatedPoints = parseInt(columns[4]);
+                        if (accumulatedPoints >= 0) {
+                            data.push({
+                                no: columns[0],
+                                function: columns[1],
+                                subDepartment: columns[2] || '',
+                                account: columns[3] || '',
+                                accumulatedPoints: accumulatedPoints,
+                                teamSize: parseInt(columns[5]) || 0,
+                                pointsPerEmployee: parseFloat(columns[6]) || 0
+                            });
+                        }
+                    }
                 }
 
-                // Sort by points descending
-                data.sort((a, b) => b.points - a.points);
+                // Separate individual and team data
+                const individualData = [];
+                const teamData = [];
 
-                return data;
+                data.forEach(item => {
+                    if (item.id && item.fullName) {
+                        // Individual data
+                        individualData.push(item);
+                    } else if (item.accumulatedPoints !== undefined && item.teamSize !== undefined) {
+                        // Team data
+                        teamData.push(item);
+                    }
+                });
+
+                // Sort individual data by points descending
+                individualData.sort((a, b) => b.points - a.points);
+
+                // Sort team data by Accumulated Points per Employee descending
+                teamData.sort((a, b) => (b.pointsPerEmployee || 0) - (a.pointsPerEmployee || 0));
+
+                // Store both datasets in cache
+                cachedLeaderboardData.individual = individualData;
+                cachedLeaderboardData.team = teamData;
+
+                // Return individual data by default for backward compatibility
+                return individualData;
 
             } catch (error) {
                 return [];
@@ -2375,7 +2497,7 @@
                     <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
                         <div class="grid grid-cols-6 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
                             <div class="text-white/80">No</div>
-                            <div class="text-white/80">Id</div>
+                            <div class="text-white/80">ID</div>
                             <div class="text-white/80">Fullname</div>
                             <div class="text-white/80">Account</div>
                             <div class="text-white/80">Function</div>
@@ -2514,7 +2636,7 @@
                     <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
                         <div class="grid grid-cols-6 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
                             <div class="text-white/80">No</div>
-                            <div class="text-white/80">Id</div>
+                            <div class="text-white/80 pl-4">ID</div>
                             <div class="text-white/80">Fullname</div>
                             <div class="text-white/80">Account</div>
                             <div class="text-white/80">Function</div>
@@ -2550,9 +2672,14 @@
                 return { first: null, second: null, third: null };
             }
 
-            // Sort by accumulatedPoints for teams, points for individuals
-            const sortKey = isTeamData ? 'accumulatedPoints' : 'points';
-            const sortedData = [...leaderboardData].sort((a, b) => b[sortKey] - a[sortKey]);
+            // Sort by pointsPerEmployee for teams, points for individuals
+            const sortedData = [...leaderboardData].sort((a, b) => {
+                if (isTeamData) {
+                    return (b.pointsPerEmployee || 0) - (a.pointsPerEmployee || 0);
+                } else {
+                    return b.points - a.points;
+                }
+            });
 
             return {
                 first: sortedData[0] || null,
@@ -2613,14 +2740,16 @@
         }
 
         // Display leaderboard data in the table
-        function displayLeaderboardData(leaderboardData, isTeamData = false) {
+        function displayLeaderboardData(leaderboardData, isTeamData = false, updatePodium = true) {
             const individualBoard = document.getElementById('individualLeaderboard');
             const teamBoard = document.getElementById('teamLeaderboard');
             const displayBoard = isTeamData ? teamBoard : individualBoard;
 
-            // Update Podium Section FIRST
-            const topPerformers = getTopThreePerformers(leaderboardData, isTeamData);
-            renderPodium(topPerformers);
+            // Update Podium Section FIRST (only if updatePodium is true)
+            if (updatePodium) {
+                const topPerformers = getTopThreePerformers(leaderboardData, isTeamData);
+                renderPodium(topPerformers);
+            }
 
             let html = '';
 
@@ -2628,12 +2757,15 @@
                 // Team leaderboard header
                 html = `
                     <!-- Table Header -->
-                    <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                        <div class="grid grid-cols-4 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
-                            <div class="text-white/80">No</div>
-                            <div class="text-white/80">Function/Program</div>
-                            <div class="text-white/80">Account</div>
-                            <div class="text-white">Accumulated Points</div>
+                    <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-3 sm:p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
+                        <div class="grid grid-cols-12 gap-1 sm:gap-2 font-bold text-xs sm:text-sm min-w-[900px]">
+                            <div class="col-span-1 text-white/80 text-center w-8">No</div>
+                            <div class="col-span-2 text-white/80 truncate">Function</div>
+                            <div class="col-span-2 text-white/80 truncate">Sub-department (Program)</div>
+                            <div class="col-span-2 text-white/80 truncate">Account</div>
+                            <div class="col-span-1 text-white/80 text-center w-16">Accumulated Points</div>
+                            <div class="col-span-1 text-white/80 text-center w-12">Team Size</div>
+                            <div class="col-span-3 text-white/80 text-center">Accumulated Points per Employee</div>
                         </div>
                     </div>
                 `;
@@ -2641,14 +2773,15 @@
                 // Individual leaderboard header
                 html = `
                     <!-- Table Header -->
-                    <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                        <div class="grid grid-cols-6 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
-                            <div class="text-white/80">No</div>
-                            <div class="text-white/80 pl-3">Id</div>
-                            <div class="text-white/80">Fullname</div>
-                            <div class="text-white/80">Account</div>
-                            <div class="text-white/80">Function</div>
-                            <div class="text-white relative left-[-12px]">Points</div>
+                    <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-3 sm:p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
+                        <div class="grid grid-cols-12 gap-1 sm:gap-2 font-bold text-xs sm:text-sm min-w-[650px]">
+                            <div class="col-span-1 text-white/80 text-center w-8">No</div>
+                            <div class="col-span-1 text-white/80 text-center w-10">ID</div>
+                            <div class="col-span-2 text-white/80 truncate pl-2">Fullname</div>
+                            <div class="col-span-3 text-white/80 truncate">Account</div>
+                            <div class="col-span-2 text-white/80 truncate">Function</div>
+                            <div class="col-span-2 text-white/80 truncate">Sub-department (Program)</div>
+                            <div class="col-span-1 text-center text-white w-16">Points</div>
                         </div>
                     </div>
                 `;
@@ -2658,7 +2791,7 @@
                 <!-- Scrollable Table Body -->
                 <div class="max-h-[500px] overflow-y-auto bg-white">
                     <div class="p-4">
-                        <div class="space-y-3 min-w-[600px] bg-gray-50/30">
+                        <div class="space-y-3 min-w-[900px] bg-gray-50/30">
             `;
 
             if (leaderboardData.length === 0) {
@@ -2691,13 +2824,18 @@
                     if (isTeamData) {
                         // Team leaderboard row
                         const highlightedAccount = highlightSearchTerms(entry.account || 'Unknown', currentSearchQuery.team);
+                        const highlightedFunction = highlightSearchTerms(entry.function || 'Unknown', currentSearchQuery.team);
+                        const highlightedSubDepartment = highlightSearchTerms(entry.subDepartment || 'Unknown', currentSearchQuery.team);
 
                         html += `
-                            <div class="grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
-                                <div class="font-medium">${entry.no || index + 1}</div>
-                                <div class="font-medium truncate">${entry.function || 'Unknown'}</div>
-                                <div class="truncate">${highlightedAccount}</div>
-                                <div class="font-semibold ${pointsColorClass}">${entry.accumulatedPoints || 0}</div>
+                            <div class="grid grid-cols-12 gap-1 sm:gap-2 p-2 sm:p-3 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
+                                <div class="col-span-1 font-medium text-center w-8">${index + 1}</div>
+                                <div class="col-span-2 font-medium truncate pl-1">${highlightedFunction}</div>
+                                <div class="col-span-2 font-medium truncate pl-1">${highlightedSubDepartment}</div>
+                                <div class="col-span-2 truncate pl-1">${highlightedAccount}</div>
+                                <div class="col-span-1 font-semibold ${pointsColorClass} text-center w-16">${entry.accumulatedPoints || 0}</div>
+                                <div class="col-span-1 font-medium text-center w-12">${entry.teamSize || 'N/A'}</div>
+                                <div class="col-span-3 font-semibold ${pointsColorClass} text-center">${entry.pointsPerEmployee || entry.pointsPerTeamSize || 'N/A'}</div>
                             </div>
                         `;
                     } else {
@@ -2705,14 +2843,17 @@
                         const highlightedId = highlightSearchTerms(entry.id || 'N/A', currentSearchQuery.individual);
                         const highlightedName = highlightSearchTerms(entry.fullName || 'N/A', currentSearchQuery.individual);
 
+                        const highlightedSubDepartment = highlightSearchTerms(entry.subDepartment || 'N/A', currentSearchQuery.individual);
+
                         html += `
-                            <div class="grid grid-cols-6 gap-2 sm:gap-4 p-3 sm:p-4 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
-                                <div class="font-medium">${index + 1}</div>
-                                <div class="font-medium truncate">${highlightedId}</div>
-                                <div class="font-medium truncate">${highlightedName}</div>
-                                <div class="truncate">${entry.account || 'N/A'}</div>
-                                <div class="font-medium truncate">${entry.function || 'N/A'}</div>
-                                <div class="font-semibold ${pointsColorClass}">${entry.points}</div>
+                            <div class="grid grid-cols-12 gap-1 sm:gap-2 p-2 sm:p-3 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
+                                <div class="col-span-1 font-medium text-center w-8">${index + 1}</div>
+                                <div class="col-span-1 font-medium text-center w-10 truncate">${highlightedId}</div>
+                                <div class="col-span-2 font-medium truncate pl-1">${highlightedName}</div>
+                                <div class="col-span-3 truncate pl-1">${entry.account || 'N/A'}</div>
+                                <div class="col-span-2 font-medium truncate pl-1">${entry.function || 'N/A'}</div>
+                                <div class="col-span-2 font-medium truncate pl-1">${highlightedSubDepartment}</div>
+                                <div class="col-span-1 font-semibold ${pointsColorClass} text-center w-16">${entry.points}</div>
                             </div>
                         `;
                     }
@@ -2764,10 +2905,9 @@
             const teamBoard = document.getElementById('teamLeaderboard');
             const displayBoard = isTeamData ? teamBoard : individualBoard;
 
-            // Update podium for no search results
-            renderPodium({ first: null, second: null, third: null });
+            // Don't update podium for no search results - keep existing top performers
 
-            const searchCriteria = isTeamData ? 'Account' : 'ID or Full Name';
+            const searchCriteria = isTeamData ? 'Sub-department or Account' : 'ID or Full Name';
             const resultType = isTeamData ? 'teams' : 'individuals';
 
             const noResultsHtml = `
@@ -2776,7 +2916,7 @@
                     <div class="grid ${isTeamData ? 'grid-cols-4' : 'grid-cols-6'} gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
                         ${isTeamData ?
                     '<div class="text-center text-white/80">No</div><div class="text-center text-white/80">Function/Program</div><div class="text-center text-white/80">Account</div><div class="text-center text-white">Accumulated Points</div>' :
-                    '<div class="text-center text-white/80">No</div><div class="text-center text-white/80">Id</div><div class="text-center text-white/80">Fullname</div><div class="text-center text-white/80">Account</div><div class="text-center text-white/80">Function</div><div class="text-center text-white">Points</div>'
+                    '<div class="text-center text-white/80">No</div><div class="text-center text-white/80">ID</div><div class="text-center text-white/80">Fullname</div><div class="text-center text-white/80">Account</div><div class="text-center text-white/80">Function</div><div class="text-center text-white">Points</div>'
                 }
                     </div>
                 </div>
@@ -2819,7 +2959,8 @@
                 if (clearButton) {
                     clearButton.classList.add('hidden');
                 }
-                filterLeaderboard('individual');
+                // Show original data with podium update
+                displayLeaderboardData(cachedLeaderboardData.individual, false, true);
             } else {
                 const searchInput = document.getElementById('teamSearch');
                 const clearButton = document.getElementById('clearTeamSearch');
@@ -2830,7 +2971,8 @@
                 if (clearButton) {
                     clearButton.classList.add('hidden');
                 }
-                filterLeaderboard('team');
+                // Show original data with podium update
+                displayLeaderboardData(cachedLeaderboardData.team, true, true);
             }
         }
 
@@ -2922,14 +3064,16 @@
                         const nameMatch = item.fullName ? item.fullName.toLowerCase().includes(query) : false;
                         return idMatch || nameMatch;
                     } else {
-                        // Search by Account
-                        return item.account ? item.account.toLowerCase().includes(query) : false;
+                        // Search by Sub-department or Account
+                        const subDepartmentMatch = item.subDepartment ? item.subDepartment.toLowerCase().includes(query) : false;
+                        const accountMatch = item.account ? item.account.toLowerCase().includes(query) : false;
+                        return subDepartmentMatch || accountMatch;
                     }
                 });
             }
 
-            // Display filtered data
-            displayLeaderboardData(filteredData, type === 'team');
+            // Display filtered data (without updating podium)
+            displayLeaderboardData(filteredData, type === 'team', false);
         }
 
         // Highlight search results
@@ -2974,7 +3118,7 @@
             // Load leaderboard data after a short delay to ensure page is ready
             setTimeout(() => {
                 loadLeaderboardData();
-            }, 1000);
+            }, 1500);
         });
     </script>
 </body>
