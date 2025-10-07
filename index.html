@@ -8,6 +8,87 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* AI Playbooks */
+        .playbook-tab {
+            background: #ffffff;
+            color: #374151;
+            /* gray-700 */
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid #e5e7eb;
+            /* gray-200 */
+            transition: all 200ms ease;
+            font-weight: 600;
+        }
+
+        .playbook-tab:hover {
+            border-color: #27aae1;
+            color: #27aae1;
+        }
+
+        .playbook-card {
+            background: #ffffff;
+            border-radius: 1rem;
+            /* 16px */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 200ms ease;
+            cursor: pointer;
+            overflow: hidden;
+            border: 1px solid #f3f4f6;
+            /* gray-100 */
+        }
+
+        .playbook-card:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .playbook-image {
+            width: 100%;
+            height: 10rem;
+            background: #e5e7eb;
+            /* gray-200 */
+        }
+
+        .playbook-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            /* text-xs */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: #27aae1;
+            background: rgba(39, 170, 225, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .playbook-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .playbook-desc {
+            color: #4b5563;
+            /* gray-600 */
+        }
+
+        .tab-active {
+            background: #27aae1;
+            color: #ffffff;
+            border-color: #27aae1;
+        }
+
+        /* 3-line clamp utility when Tailwind line-clamp plugin is not present */
+        .line-clamp-3 {
+            line-clamp: 3;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         body {
@@ -1344,6 +1425,50 @@
         </div>
     </section>
 
+    <!-- AI Playbooks Section -->
+    <section id="ai-playbooks" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6 max-w-7xl">
+            <div class="text-center mb-10 sm:mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold gradient-text">AI Playbooks</h2>
+                <p class="text-gray-600 mt-3">Curated tips and playbooks to accelerate AI adoption</p>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
+                <button class="playbook-tab tab-active" data-category="productivity">Productivity</button>
+                <button class="playbook-tab" data-category="data">Data & Analysis</button>
+                <button class="playbook-tab" data-category="cx">Customer Experience</button>
+                <button class="playbook-tab" data-category="innovation">Innovation</button>
+            </div>
+
+            <!-- Cards Grid -->
+            <div id="playbooksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards will be loaded dynamically from Google Sheet -->
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div id="playbookModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-4 border-b">
+                    <h3 id="modalTitle" class="text-xl font-semibold">Playbook</h3>
+                    <button id="closePlaybookModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="w-full h-40 bg-gray-200 rounded-xl mb-4"></div>
+                    <p id="modalContent" class="text-gray-700 leading-relaxed"></p>
+                </div>
+                <div class="px-5 py-4 border-t bg-gray-50 text-right">
+                    <button id="modalOkBtn"
+                        class="bg-[#27aae1] text-white px-5 py-2 rounded-lg font-semibold hover:opacity-90">Got
+                        it</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Program Introduction Section -->
     <section id="program" class="py-12 sm:py-16 lg:py-20 bg-white">
         <div class="container mx-auto px-4 sm:px-6">
@@ -2195,6 +2320,9 @@
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/a/macros/kms-technology.com/s/AKfycbyaefNITlvUqSZ4nX5Sc-CyqbTX5_xJ85GTtJEl_YXlGUIbsq9HAiK6gt1YMe5PXjE/exec';
         const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfcdk1ch_DUpWIq2N6yZjwWlpyMUr8HErg6IgvwdPKM7QaA6A/viewform';
 
+        // Dedicated Google Apps Script for Playbooks (optional, not used when sharing leaderboard script)
+        const PLAYBOOKS_SCRIPT_URL = 'https://script.google.com/a/macros/kms-technology.com/s/AKfycbx1XSJ4Zc0NLY_m5tiptHR498w9dcFTS4yZx1BofRo-w9d2ezS05pLwGDkBsrOcZpU2/exec';
+
         // Global variables to store leaderboard data
         let cachedLeaderboardData = {
             individual: null,
@@ -2336,6 +2464,10 @@
         const SHEET_GID = '509222110'; // Your sheet GID
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 
+        // Playbooks API endpoint
+
+        // Use the same deployed script as leaderboard (public, fetch works)
+        const PLAYBOOKS_API_URL = GOOGLE_SCRIPT_URL + '?action=getPlaybooks';
         // CSV fallback function
         function tryCSVFallback() {
             const individuals = document.getElementById('individualLeaderboard');
@@ -2869,8 +3001,6 @@
         }
 
 
-
-
         // Display error message in leaderboard
         function displayLeaderboardError(errorMessage) {
             const individualBoard = document.getElementById('individualLeaderboard');
@@ -3114,6 +3244,171 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize search functionality
             initializeSearchFunctionality();
+
+            // AI Playbooks: tabs & modal handlers
+            (function initPlaybooks() {
+                const tabs = document.querySelectorAll('.playbook-tab');
+                const grid = document.getElementById('playbooksGrid');
+                const cards = grid ? grid.querySelectorAll('.playbook-card') : [];
+                const modal = document.getElementById('playbookModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalContent = document.getElementById('modalContent');
+                const closeBtn = document.getElementById('closePlaybookModal');
+                const okBtn = document.getElementById('modalOkBtn');
+
+                // Tab switching
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabs.forEach(t => t.classList.remove('tab-active'));
+                        tab.classList.add('tab-active');
+                        const cat = tab.getAttribute('data-category');
+                        cards.forEach(card => {
+                            const show = card.getAttribute('data-category') === cat;
+                            card.style.display = show ? '' : 'none';
+                        });
+                    });
+                });
+
+                // Default filter on first tab
+                const firstTab = document.querySelector('.playbook-tab.tab-active') || tabs[0];
+                if (firstTab) firstTab.click();
+
+                // Open modal from card
+                cards.forEach(card => {
+                    const open = () => {
+                        if (!modal) return;
+                        modalTitle.textContent = card.getAttribute('data-title') || 'Playbook';
+                        modalContent.textContent = card.getAttribute('data-content') || '';
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    };
+                    card.addEventListener('click', open);
+                    card.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            open();
+                        }
+                    });
+                });
+
+                // Close modal
+                function closeModal() {
+                    if (!modal) return;
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+                if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                if (okBtn) okBtn.addEventListener('click', closeModal);
+                if (modal) {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) closeModal();
+                    });
+                }
+            })();
+
+            // Prepare Playbooks Step 2: load CSV and render (owner, timestamp, category mapping, approved only)
+            (function preloadPlaybooks() {
+                // We'll hook this up fully in Step 2; for now, structure and mapping are ready
+                window.parsePlaybooksCSV = function (csvText) {
+                    const lines = csvText.trim().split('\n');
+                    // Expect columns: A Timestamp, B Email Address, C Category, D Description, ... K Approval
+                    const header = lines[0];
+                    const result = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const row = parseCSVLine(lines[i]);
+                        if (!row || row.length < 11) continue;
+                        const timestamp = row[0] || '';
+                        const owner = row[1] || '';
+                        const rawCategory = row[2] || '';
+                        const description = row[3] || '';
+                        const approval = (row[10] || '').toLowerCase();
+                        if (approval !== 'approved') continue; // Column K must be Approved
+
+                        const category = mapPlaybookCategory(rawCategory);
+                        result.push({ timestamp, owner, category, description });
+                    }
+                    return result;
+                };
+
+                window.mapPlaybookCategory = function (text) {
+                    const t = (text || '').toLowerCase();
+                    if (t.includes('driving operational efficiency') || t.includes('productivity')) return 'productivity';
+                    if (t.includes('predictive insights') || t.includes('data') || t.includes('analysis')) return 'data';
+                    if (t.includes('customer experience')) return 'cx';
+                    if (t.includes('innovation') || t.includes('creativity')) return 'innovation';
+                    return 'productivity';
+                };
+            })();
+
+            // STEP 2: Fetch and render playbooks using the same fetch approach as leaderboard
+            (async function loadPlaybooks() {
+                const grid = document.getElementById('playbooksGrid');
+                if (!grid) return;
+
+                // Show loading state
+                grid.innerHTML = '<div class="col-span-full text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#27aae1]"></div><p class="mt-2 text-gray-600">Loading playbooks...</p></div>';
+                try {
+                    const res = await fetch(PLAYBOOKS_API_URL, { cache: 'no-store' });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+
+                    // Clear loading state
+                    grid.innerHTML = '';
+
+                    if (!data || !data.success || !data.playbooks || data.playbooks.length === 0) {
+                        grid.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-600">No approved playbooks found.</p></div>';
+                        return;
+                    }
+
+                    data.playbooks.forEach((playbook) => {
+                        const card = document.createElement('div');
+                        card.className = 'playbook-card';
+                        card.setAttribute('data-category', playbook.category);
+                        card.setAttribute('data-title', playbook.owner || 'Playbook');
+                        card.setAttribute('data-content', playbook.description || '');
+                        card.tabIndex = 0;
+
+                        const prettyDate = playbook.timestamp ? new Date(playbook.timestamp).toLocaleString() : '';
+                        const catLabel = (playbook.category === 'productivity') ? 'Productivity' :
+                            (playbook.category === 'data') ? 'Data & Analysis' :
+                                (playbook.category === 'cx') ? 'Customer Experience' : 'Innovation';
+
+                        card.innerHTML = `
+                            <div class="playbook-image"></div>
+                            <div class="p-4">
+                                <div class="playbook-badge">${catLabel}</div>
+                                <h3 class="playbook-title">${playbook.description ? (playbook.description.substring(0, 64)) : 'AI Tip'}</h3>
+                                <p class="text-sm text-gray-500 mb-2">${prettyDate} • ${playbook.owner || ''}</p>
+                                <p class="playbook-desc line-clamp-3">${playbook.description || ''}</p>
+                            </div>`;
+
+                        grid.appendChild(card);
+                    });
+
+                    // Bind modal handlers
+                    const modal = document.getElementById('playbookModal');
+                    const modalTitle = document.getElementById('modalTitle');
+                    const modalContent = document.getElementById('modalContent');
+                    const bind = (el) => {
+                        const open = () => {
+                            modalTitle.textContent = el.getAttribute('data-title') || 'Playbook';
+                            modalContent.textContent = el.getAttribute('data-content') || '';
+                            modal.classList.remove('hidden');
+                            modal.classList.add('flex');
+                        };
+                        el.addEventListener('click', open);
+                        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+                    };
+                    grid.querySelectorAll('.playbook-card').forEach(bind);
+
+                    // Trigger current tab filter
+                    const activeTab = document.querySelector('.playbook-tab.tab-active') || document.querySelector('.playbook-tab');
+                    if (activeTab) activeTab.click();
+                } catch (err) {
+                    grid.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-red-600">Failed to load playbooks. Please check API deployment and access.</p></div>';
+                    console.error('Failed to load playbooks', err);
+                }
+            })();
 
             // Load leaderboard data after a short delay to ensure page is ready
             setTimeout(() => {

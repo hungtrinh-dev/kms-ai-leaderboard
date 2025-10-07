@@ -358,6 +358,93 @@ function getLeaderboardData() {
   }
 }
 
+// Function to get playbooks data from Form Responses sheet
+function getPlaybooksData() {
+  try {
+    // Get the Form Responses sheet (you may need to adjust the sheet name)
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = spreadsheet.getSheetByName('Form Responses') || spreadsheet.getSheets()[0];
+    
+    if (!sheet) {
+      return {
+        success: false,
+        error: 'Form Responses sheet not found',
+        playbooks: []
+      };
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    // Find column indices
+    const timestampIndex = headers.indexOf('Timestamp');
+    const emailIndex = headers.indexOf('Email Address');
+    const categoryIndex = headers.indexOf('Your Tip Category');
+    const descriptionIndex = headers.indexOf('Description of Your Tip');
+    const approvalIndex = headers.indexOf('Anh Chanh'); // Assuming first approval column
+    
+    if (timestampIndex === -1 || emailIndex === -1 || categoryIndex === -1 || descriptionIndex === -1 || approvalIndex === -1) {
+      return {
+        success: false,
+        error: 'Required columns not found in sheet',
+        playbooks: []
+      };
+    }
+
+    const playbooks = [];
+    
+    // Process each row (skip header)
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const approval = row[approvalIndex];
+      
+      // Only include approved entries
+      if (approval && approval.toString().toLowerCase().includes('approved')) {
+        const timestamp = row[timestampIndex];
+        const email = row[emailIndex];
+        const category = row[categoryIndex];
+        const description = row[descriptionIndex];
+        
+        // Map category to our internal categories
+        let mappedCategory = 'productivity'; // default
+        if (category) {
+          const cat = category.toString().toLowerCase();
+          if (cat.includes('driving operational efficiency') || cat.includes('productivity')) {
+            mappedCategory = 'productivity';
+          } else if (cat.includes('predictive insights') || cat.includes('data') || cat.includes('analysis')) {
+            mappedCategory = 'data';
+          } else if (cat.includes('customer experience')) {
+            mappedCategory = 'cx';
+          } else if (cat.includes('innovation') || cat.includes('creativity')) {
+            mappedCategory = 'innovation';
+          }
+        }
+        
+        playbooks.push({
+          timestamp: timestamp ? timestamp.toString() : '',
+          owner: email ? email.toString() : '',
+          category: mappedCategory,
+          description: description ? description.toString() : ''
+        });
+      }
+    }
+
+    return {
+      success: true,
+      playbooks: playbooks,
+      count: playbooks.length
+    };
+    
+  } catch (error) {
+    console.error('Error getting playbooks data:', error);
+    return {
+      success: false,
+      error: error.toString(),
+      playbooks: []
+    };
+  }
+}
+
 // Handle GET requests for leaderboard data
 function doGet(e) {
   // Handle GET requests (for testing) and leaderboard data requests
@@ -381,6 +468,26 @@ function doGet(e) {
     }
   }
 
+  // Handle playbooks data requests
+  if (e.parameter && e.parameter.action === 'getPlaybooks') {
+    console.log('Playbooks data requested');
+    const playbooksData = getPlaybooksData();
+
+    // Check if JSONP callback is requested
+    if (e.parameter.callback) {
+      console.log('JSONP callback requested:', e.parameter.callback);
+      const jsonpResponse = e.parameter.callback + '(' + JSON.stringify(playbooksData) + ');';
+      return ContentService
+        .createTextOutput(jsonpResponse)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      // Regular JSON response
+      return ContentService
+        .createTextOutput(JSON.stringify(playbooksData))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
   // Handle form submissions via GET (for iframe method)
   if (e.parameter && Object.keys(e.parameter).length > 1) {
     return doPost(e);
@@ -394,7 +501,9 @@ function doGet(e) {
       endpoints: {
         submit: 'POST /',
         leaderboard: 'GET /?action=getLeaderboard',
-        leaderboardJsonp: 'GET /?action=getLeaderboard&callback=yourCallback'
+        leaderboardJsonp: 'GET /?action=getLeaderboard&callback=yourCallback',
+        playbooks: 'GET /?action=getPlaybooks',
+        playbooksJsonp: 'GET /?action=getPlaybooks&callback=yourCallback'
       }
     }))
     .setMimeType(ContentService.MimeType.JSON);
