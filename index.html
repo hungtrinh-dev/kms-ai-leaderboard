@@ -7,6 +7,40 @@
     <title>KMS AI Tips Sharing Program</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+        import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6dadDMVr3MkRCLtiMXJp8nCCnCZn31iM",
+            authDomain: "kms-ai-leaderboard.firebaseapp.com",
+            projectId: "kms-ai-leaderboard",
+            storageBucket: "kms-ai-leaderboard.firebasestorage.app",
+            messagingSenderId: "445101582233",
+            appId: "1:445101582233:web:d1e7dcf69fd89c16bd5508",
+            measurementId: "G-BSM8WNLZSL"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Make auth available globally
+        window.auth = auth;
+        window.provider = provider;
+        window.signInWithPopup = signInWithPopup;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.analytics = analytics;
+        window.logEvent = logEvent;
+    </script>
     <style>
         /* AI Playbooks */
         .playbook-tab {
@@ -1295,6 +1329,29 @@
                     <a href="#submit" class="text-white/80 hover:text-white transition-colors font-medium">Submit</a>
                     <a href="#leaderboard"
                         class="text-white/80 hover:text-white transition-colors font-medium">Leaderboard</a>
+
+                </div>
+
+                <!-- User Authentication Section -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <!-- Login Button (when not authenticated) -->
+                    <button id="loginBtn" onclick="openLoginModal()"
+                        class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-medium transition-all duration-300 backdrop-blur-sm border border-white/20">
+                        <i class="fab fa-google mr-2"></i>Login
+                    </button>
+
+                    <!-- User Profile (when authenticated) -->
+                    <div id="userProfile" class="hidden flex items-center space-x-3">
+                        <div
+                            class="flex items-center space-x-2 bg-white/20 px-3 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                            <img id="userAvatar" src="" alt="User Avatar" class="w-8 h-8 rounded-full">
+                            <span id="userName" class="text-white font-medium text-sm"></span>
+                        </div>
+                        <button id="logoutBtn" onclick="signOutUser()"
+                            class="bg-red-500/80 hover:bg-red-500 text-white px-3 py-2 rounded-full font-medium transition-all duration-300 text-sm">
+                            <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -1316,6 +1373,31 @@
                         class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium">Submit</a>
                     <a href="#leaderboard"
                         class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium">Leaderboard</a>
+                    <a href="#myProgress" id="mobileMyProgressLink"
+                        class="text-white/80 hover:text-white transition-colors text-center py-2 font-medium hidden">My
+                        Progress</a>
+
+                    <!-- Mobile Authentication -->
+                    <div class="border-t border-white/20 pt-4 mt-4">
+                        <!-- Mobile Login Button -->
+                        <button id="mobileLoginBtn" onclick="openLoginModal()"
+                            class="w-full bg-white/20 hover:bg-white/30 text-white px-4 py-3 rounded-full font-medium transition-all duration-300 backdrop-blur-sm border border-white/20">
+                            <i class="fab fa-google mr-2"></i>Login with Google
+                        </button>
+
+                        <!-- Mobile User Profile -->
+                        <div id="mobileUserProfile" class="hidden">
+                            <div
+                                class="flex items-center justify-center space-x-3 bg-white/20 px-4 py-3 rounded-full backdrop-blur-sm border border-white/20 mb-3">
+                                <img id="mobileUserAvatar" src="" alt="User Avatar" class="w-8 h-8 rounded-full">
+                                <span id="mobileUserName" class="text-white font-medium"></span>
+                            </div>
+                            <button id="mobileLogoutBtn" onclick="signOutUser()"
+                                class="w-full bg-red-500/80 hover:bg-red-500 text-white px-4 py-3 rounded-full font-medium transition-all duration-300">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1468,6 +1550,41 @@
             </div>
         </div>
     </section>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <h3 class="text-xl font-semibold text-gray-800">Sign In to KMS AI</h3>
+                <button id="closeLoginModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="text-center">
+                    <div class="mb-6">
+                        <div
+                            class="w-16 h-16 bg-gradient-to-r from-[#27aae1] to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-robot text-white text-2xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Welcome to KMS AI Tips Sharing</h4>
+                        <p class="text-gray-600 text-sm">Sign in with your Google account to access exclusive features
+                            and track your progress</p>
+                    </div>
+
+                    <button id="googleSignInBtn" onclick="signInWithGoogle()"
+                        class="w-full bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-3 shadow-sm hover:shadow-md">
+                        <i class="fab fa-google text-red-500 text-xl"></i>
+                        <span>Continue with Google</span>
+                    </button>
+
+                    <div class="mt-4 text-xs text-gray-500">
+                        By signing in, you agree to our Terms of Service and Privacy Policy
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Program Introduction Section -->
     <section id="program" class="py-12 sm:py-16 lg:py-20 bg-white">
@@ -1941,6 +2058,7 @@
         </div>
     </section>
 
+
     <!-- Submission Form Section -->
     <section id="submit" class="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div class="container mx-auto px-4 sm:px-6">
@@ -2313,6 +2431,32 @@
                     }
                 });
             }
+
+            // Initialize authentication
+            initializeAuth();
+
+            // Login modal event listeners
+            const loginModal = document.getElementById('loginModal');
+            const closeLoginModalBtn = document.getElementById('closeLoginModal');
+
+            if (closeLoginModalBtn) {
+                closeLoginModalBtn.addEventListener('click', closeLoginModal);
+            }
+
+            if (loginModal) {
+                loginModal.addEventListener('click', function (event) {
+                    if (event.target === loginModal) {
+                        closeLoginModal();
+                    }
+                });
+            }
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeLoginModal();
+                }
+            });
         });
 
 
@@ -2335,8 +2479,276 @@
             team: ''
         };
 
+        // Global variables for authentication
+        let currentUser = null;
+        let authInitialized = false;
+
+        // Create default avatar with user initials
+        function createDefaultAvatar(userName) {
+            // Get initials from user name
+            const initials = userName
+                .split(' ')
+                .map(word => word.charAt(0))
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+
+            // Create a colorful avatar using initials
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+                '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+            ];
+            
+            // Use first character of name to determine color (consistent for same user)
+            const colorIndex = userName.charCodeAt(0) % colors.length;
+            const backgroundColor = colors[colorIndex];
+
+            // Create SVG avatar
+            const svg = `
+                <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="16" fill="${backgroundColor}"/>
+                    <text x="16" y="20" font-family="Arial, sans-serif" font-size="12" font-weight="bold" 
+                          text-anchor="middle" fill="white">${initials}</text>
+                </svg>
+            `;
+
+            // Convert SVG to data URL
+            const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            return svgUrl;
+        }
+
+        // Authentication Functions
+        function initializeAuth() {
+            if (authInitialized) return;
+
+            // Wait for Firebase to be available
+            const checkFirebase = () => {
+                if (window.auth && window.onAuthStateChanged) {
+                    // Set up auth state listener
+                    window.onAuthStateChanged(window.auth, (user) => {
+                        currentUser = user;
+                        updateAuthUI();
+
+                        if (user) {
+                            console.log('User signed in:', user.displayName);
+                            showNotification('success', `Welcome back, ${user.displayName}!`);
+                        } else {
+                            console.log('User signed out');
+                        }
+                    });
+                    authInitialized = true;
+                } else {
+                    // Retry after 100ms
+                    setTimeout(checkFirebase, 100);
+                }
+            };
+            checkFirebase();
+        }
+
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('loginBtn');
+            const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+            const userProfile = document.getElementById('userProfile');
+            const mobileUserProfile = document.getElementById('mobileUserProfile');
+            const myProgressLink = document.getElementById('myProgressLink');
+            const mobileMyProgressLink = document.getElementById('mobileMyProgressLink');
+
+            if (currentUser) {
+                // User is signed in
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (mobileLoginBtn) mobileLoginBtn.classList.add('hidden');
+                if (userProfile) {
+                    userProfile.classList.remove('hidden');
+                    const userAvatar = document.getElementById('userAvatar');
+                    const userName = document.getElementById('userName');
+                    if (userAvatar) {
+                        userAvatar.src = currentUser.photoURL || createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
+                        userAvatar.onerror = function() {
+                            this.src = createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
+                        };
+                    }
+                    if (userName) userName.textContent = currentUser.displayName || 'User';
+                }
+                if (mobileUserProfile) {
+                    mobileUserProfile.classList.remove('hidden');
+                    const mobileUserAvatar = document.getElementById('mobileUserAvatar');
+                    const mobileUserName = document.getElementById('mobileUserName');
+                    if (mobileUserAvatar) {
+                        mobileUserAvatar.src = currentUser.photoURL || createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
+                        mobileUserAvatar.onerror = function() {
+                            this.src = createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
+                        };
+                    }
+                    if (mobileUserName) mobileUserName.textContent = currentUser.displayName || 'User';
+                }
+                if (myProgressLink) myProgressLink.classList.remove('hidden');
+                if (mobileMyProgressLink) mobileMyProgressLink.classList.remove('hidden');
+
+                // Load user progress data (if function exists)
+                if (typeof loadUserProgress === 'function') {
+                    loadUserProgress();
+                }
+            } else {
+                // User is signed out
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (mobileLoginBtn) mobileLoginBtn.classList.remove('hidden');
+                if (userProfile) userProfile.classList.add('hidden');
+                if (mobileUserProfile) mobileUserProfile.classList.add('hidden');
+                if (myProgressLink) myProgressLink.classList.add('hidden');
+                if (mobileMyProgressLink) mobileMyProgressLink.classList.add('hidden');
+            }
+        }
+
+        async function signInWithGoogle() {
+            try {
+                if (!window.auth || !window.provider || !window.signInWithPopup) {
+                    showNotification('error', 'Authentication service not ready. Please refresh the page.');
+                    return;
+                }
+
+                // Show loading state
+                const googleSignInBtn = document.getElementById('googleSignInBtn');
+                const originalText = googleSignInBtn.innerHTML;
+                googleSignInBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing in...';
+                googleSignInBtn.disabled = true;
+
+                console.log('Starting Google sign-in process...');
+                const result = await window.signInWithPopup(window.auth, window.provider);
+                console.log('Sign in successful:', result.user);
+
+                // Track successful sign-in with analytics
+                try {
+                    if (window.analytics && window.logEvent) {
+                        window.logEvent(window.analytics, 'login', {
+                            method: 'google'
+                        });
+                        console.log('Analytics event logged successfully');
+                    }
+                } catch (analyticsError) {
+                    console.warn('Analytics logging failed:', analyticsError);
+                    // Don't let analytics errors prevent the login flow
+                }
+
+                // Close modal
+                console.log('Closing login modal...');
+                closeLoginModal();
+                console.log('Login modal closed successfully');
+
+                // Reset button state (in case modal doesn't close)
+                setTimeout(() => {
+                    googleSignInBtn.innerHTML = originalText;
+                    googleSignInBtn.disabled = false;
+                }, 1000);
+
+            } catch (error) {
+                console.error('Sign in error:', error);
+                showNotification('error', `Sign in failed: ${error.message}`);
+
+                // Track failed sign-in with analytics
+                try {
+                    if (window.analytics && window.logEvent) {
+                        window.logEvent(window.analytics, 'login_error', {
+                            error: error.code || 'unknown',
+                            method: 'google'
+                        });
+                    }
+                } catch (analyticsError) {
+                    console.warn('Analytics error logging failed:', analyticsError);
+                }
+
+                // Reset button state
+                const googleSignInBtn = document.getElementById('googleSignInBtn');
+                googleSignInBtn.innerHTML = originalText;
+                googleSignInBtn.disabled = false;
+            }
+        }
+
+        async function signOutUser() {
+            try {
+                if (!window.auth || !window.signOut) {
+                    showNotification('error', 'Authentication service not ready. Please refresh the page.');
+                    return;
+                }
+
+                await window.signOut(window.auth);
+
+                // Track sign-out with analytics
+                if (window.analytics && window.logEvent) {
+                    window.logEvent(window.analytics, 'logout');
+                }
+
+                showNotification('success', 'Signed out successfully');
+
+            } catch (error) {
+                console.error('Sign out error:', error);
+                showNotification('error', `Sign out failed: ${error.message}`);
+            }
+        }
+
+        function openLoginModal() {
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeLoginModal() {
+            console.log('Attempting to close login modal...');
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+                console.log('Modal element found, closing...');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+
+                // Also reset the Google sign-in button state
+                const googleSignInBtn = document.getElementById('googleSignInBtn');
+                if (googleSignInBtn) {
+                    googleSignInBtn.innerHTML = `
+                        <i class="fab fa-google text-red-500 text-xl"></i>
+                        <span>Continue with Google</span>
+                    `;
+                    googleSignInBtn.disabled = false;
+                }
+
+                console.log('Modal closed successfully');
+            } else {
+                console.error('Login modal element not found!');
+            }
+        }
+
+        function loadUserProgress() {
+            if (!currentUser) return;
+
+            // This is a placeholder function - you can integrate with your backend/Google Sheets
+            // to fetch user-specific data based on currentUser.email or currentUser.uid
+
+            // For now, we'll just log the user data
+            const userEmail = currentUser.email;
+            console.log('Loading progress for user:', userEmail);
+
+            // You can filter the leaderboard data by user email
+            if (cachedLeaderboardData.individual) {
+                const userData = cachedLeaderboardData.individual.find(item =>
+                    item.account && item.account.toLowerCase().includes(userEmail.toLowerCase())
+                );
+
+                if (userData) {
+                    console.log('User found in leaderboard:', userData);
+                } else {
+                    console.log('User not found in leaderboard yet');
+                }
+            }
+        }
+
         // Notification system
         function showNotification(type, message) {
+            console.log('showNotification called:', type, message);
+            
             // Remove existing notifications
             const existingNotifications = document.querySelectorAll('.notification');
             existingNotifications.forEach(notif => notif.remove());
@@ -2362,16 +2774,20 @@
                 </div>
             `;
 
+            console.log('Appending notification to body...');
             document.body.appendChild(notification);
+            console.log('Notification appended successfully');
 
             // Animate in
             setTimeout(() => {
+                console.log('Animating notification in...');
                 notification.classList.remove('translate-y-full', 'translate-x-full');
             }, 100);
 
             // Auto-remove after 5 seconds
             setTimeout(() => {
                 if (notification.parentElement) {
+                    console.log('Auto-removing notification...');
                     notification.classList.add('translate-y-full', 'translate-x-full');
                     setTimeout(() => notification.remove(), 300);
                 }
