@@ -1303,6 +1303,159 @@
                 max-width: 350px;
             }
         }
+
+
+
+        /* Instagram Post Mockup Styles - REVISED */
+        .insta-post {
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            /* Slightly softer corners than original IG */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .insta-post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+        }
+
+        /* This is the circular frame for the avatar */
+        .insta-post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #efefef;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            /* Ensures if an img is added, it stays circular */
+        }
+
+        /* This centers the placeholder icon */
+        .insta-post-avatar i {
+            color: #a8a8a8;
+        }
+
+        .insta-post-username {
+            font-weight: 600;
+            font-size: 14px;
+            color: #262626;
+            flex-grow: 1;
+            /* This pushes the icons to the far right */
+        }
+
+        .insta-post-header-icons {
+            display: flex;
+            align-items: center;
+        }
+
+        .insta-post-header-icons i {
+            font-size: 22px;
+            color: #262626;
+            cursor: pointer;
+            margin-left: 18px;
+        }
+
+        .insta-post-bookmark-icon {
+            color: #f58529 !important;
+            /* Orange color for the bookmark */
+        }
+
+        .insta-post-image {
+            width: 100%;
+            padding-bottom: 100%;
+            background-color: #333;
+            border-top: 1px solid #efefef;
+            border-bottom: 1px solid #efefef;
+        }
+
+        /* Container for everything below the image */
+        .insta-post-body {
+            padding: 0 16px;
+        }
+
+        .insta-post-interaction-bar {
+            display: flex;
+            align-items: flex-start;
+            /* Top-aligns tags and icons */
+            padding: 12px 0;
+        }
+
+        .insta-post-tags {
+            flex-basis: 60%;
+            font-size: 14px;
+            color: #8e8e8e;
+            line-height: 1.5;
+            /* Spacing between lines of tags */
+        }
+
+        .insta-post-icon-group {
+            flex-basis: 40%;
+            display: flex;
+            justify-content: flex-end;
+            /* Aligns icons to the right */
+        }
+
+        .insta-post-icon-group i {
+            font-size: 24px;
+            cursor: pointer;
+            color: #262626;
+            margin-left: 16px;
+            transition: color 0.2s;
+        }
+
+        .insta-post-icon-group i:hover {
+            color: #8e8e8e;
+        }
+
+        .insta-post-icon-group .fa-heart {
+            color: #ed4956;
+        }
+
+        .insta-post-body hr {
+            border: 0;
+            height: 1px;
+            background-color: #efefef;
+            margin: 0;
+        }
+
+        .insta-post-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            padding: 12px 0;
+        }
+
+        .insta-post-likes {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .insta-post-likes i {
+            color: #ed4956;
+            font-size: 14px;
+            margin-right: 6px;
+        }
+
+        .insta-post-timestamp {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+
+        .insta-post-comments-link {
+            font-size: 14px;
+            color: #8e8e8e;
+            cursor: pointer;
+            padding-bottom: 16px;
+        }
     </style>
 </head>
 
@@ -2498,7 +2651,7 @@
                 '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
                 '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
             ];
-            
+
             // Use first character of name to determine color (consistent for same user)
             const colorIndex = userName.charCodeAt(0) % colors.length;
             const backgroundColor = colors[colorIndex];
@@ -2515,7 +2668,7 @@
             // Convert SVG to data URL
             const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
             const svgUrl = URL.createObjectURL(svgBlob);
-            
+
             return svgUrl;
         }
 
@@ -2565,7 +2718,7 @@
                     const userName = document.getElementById('userName');
                     if (userAvatar) {
                         userAvatar.src = currentUser.photoURL || createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
-                        userAvatar.onerror = function() {
+                        userAvatar.onerror = function () {
                             this.src = createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
                         };
                     }
@@ -2577,7 +2730,7 @@
                     const mobileUserName = document.getElementById('mobileUserName');
                     if (mobileUserAvatar) {
                         mobileUserAvatar.src = currentUser.photoURL || createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
-                        mobileUserAvatar.onerror = function() {
+                        mobileUserAvatar.onerror = function () {
                             this.src = createDefaultAvatar(currentUser.displayName || currentUser.email || 'User');
                         };
                     }
@@ -2748,7 +2901,7 @@
         // Notification system
         function showNotification(type, message) {
             console.log('showNotification called:', type, message);
-            
+
             // Remove existing notifications
             const existingNotifications = document.querySelectorAll('.notification');
             existingNotifications.forEach(notif => notif.remove());
@@ -3756,11 +3909,114 @@
                 };
             })();
 
-            // STEP 2: Fetch and render playbooks using the same fetch approach as leaderboard
-            (async function loadPlaybooks() {
+            // STEP 2: Fetch and render playbooks - MOCKUP VERSION
+            (function loadPlaybooks() {
                 const grid = document.getElementById('playbooksGrid');
                 if (!grid) return;
 
+                // --- START OF MOCK DATA SECTION ---
+                const mockData = [
+                    {
+                        username: 'AI_Innovator',
+                        likes: 5384,
+                        comments: 125,
+                        hashtags: '#happy #photo #business #friend #show',
+                        timestamp: '4 hours ago'
+                    },
+                    {
+                        username: 'CodeWizard',
+                        likes: 4102,
+                        comments: 98,
+                        hashtags: '#dev #automation #ai #kms',
+                        timestamp: '5 hours ago'
+                    },
+                    {
+                        username: 'TechGuru',
+                        likes: 6219,
+                        comments: 231,
+                        hashtags: '#technology #future #innovation',
+                        timestamp: '8 hours ago'
+                    },
+                    {
+                        username: 'DataScientist',
+                        likes: 3847,
+                        comments: 156,
+                        hashtags: '#datascience #ml #analytics #insights',
+                        timestamp: '12 hours ago'
+                    },
+                    {
+                        username: 'ProductManager',
+                        likes: 2956,
+                        comments: 89,
+                        hashtags: '#product #strategy #userexperience #growth',
+                        timestamp: '1 day ago'
+                    },
+                    {
+                        username: 'DesignThinking',
+                        likes: 4521,
+                        comments: 167,
+                        hashtags: '#design #creativity #ux #innovation',
+                        timestamp: '1 day ago'
+                    },
+                    {
+                        username: 'CloudEngineer',
+                        likes: 3290,
+                        comments: 134,
+                        hashtags: '#cloud #infrastructure #devops #scalability',
+                        timestamp: '2 days ago'
+                    }
+                ];
+                // --- END OF MOCK DATA SECTION ---
+
+                // Clear current content (loading or error states)
+                grid.innerHTML = '';
+
+                // Iterate through mock data and create UI elements
+                mockData.forEach((post, index) => {
+                    const postElement = document.createElement('div');
+                    postElement.className = 'insta-post';
+
+                    postElement.innerHTML = `
+                        <div class="insta-post-header">
+                            <div class="insta-post-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="insta-post-username">${post.username}</span>
+                            <div class="insta-post-header-icons">
+                                <i class="fas fa-bookmark insta-post-bookmark-icon"></i>
+                                <i class="fas fa-ellipsis-h"></i>
+                            </div>
+                        </div>
+
+                        <div class="insta-post-image"></div>
+
+                        <div class="insta-post-body">
+                            <div class="insta-post-interaction-bar">
+                                <div class="insta-post-tags">${post.hashtags}</div>
+                                <div class="insta-post-icon-group">
+                                    <i class="far fa-heart"></i>
+                                    <i class="far fa-comment"></i>
+                                    <i class="fas fa-arrow-up-from-bracket"></i>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="insta-post-stats">
+                                <div class="insta-post-likes">
+                                    <i class="fas fa-heart"></i>
+                                    <span>${post.likes.toLocaleString()} Likes</span>
+                                </div>
+                                <div class="insta-post-timestamp">${post.timestamp}</div>
+                            </div>
+                            <div class="insta-post-comments-link">
+                                Show all comments (${post.comments}) ↓
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(postElement);
+                });
+
+                // NOTE: Real API calling code has been commented out. When API is available, delete the mock code above and uncomment the code section below.
+                /*
                 // Show loading state
                 grid.innerHTML = '<div class="col-span-full text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#27aae1]"></div><p class="mt-2 text-gray-600">Loading playbooks...</p></div>';
                 try {
@@ -3824,6 +4080,7 @@
                     grid.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-red-600">Failed to load playbooks. Please check API deployment and access.</p></div>';
                     console.error('Failed to load playbooks', err);
                 }
+                */
             })();
 
             // Load leaderboard data after a short delay to ensure page is ready
