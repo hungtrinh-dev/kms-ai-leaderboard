@@ -1,6 +1,11 @@
 // Google Apps Script for KMS AI Tips Submission Form
 // Deploy this as a web app in your Google Sheet
 
+// Firebase Configuration
+const FIREBASE_PROJECT_ID = 'kms-ai-leaderboard';
+const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+const FIRESTORE_TABLE_PLAYBOOKS = 'playbooks';
+
 function doPost(e) {
   try {
     // Get the active spreadsheet
@@ -530,3 +535,184 @@ function testSubmission() {
   const result = doPost(mockEvent);
   console.log('Test result:', result.getContent());
 }
+
+// --- FIREBASE INTERACTION SECTION ---
+function savePlaybookToFirebase(submissionData) {
+  try {
+    const url = `${FIRESTORE_BASE_URL}/${FIRESTORE_TABLE_PLAYBOOKS}`;
+    const key = createPlaybookKey(submissionData.email, submissionData.timestamp);
+
+    const firestoreData = {
+      fields: {
+        category: { stringValue: submissionData.category || '' },
+        description: { stringValue: submissionData.description || '' },
+        email: { stringValue: submissionData.email || '' },
+        isApproved: { booleanValue: false },
+        timestamp: { timestampValue: submissionData.timestamp || new Date().toISOString() },
+        sheetKey: { stringValue: key }
+      }
+    };
+
+    const options = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      payload: JSON.stringify(firestoreData)
+    };
+
+    const response = UrlFetchApp.fetch(url, options);
+    
+    if (response.getResponseCode() === 200) {
+      Logger.log('Successfully saved to Firestore with sheetKey: ' + key);
+      return { success: true };
+    } else {
+      Logger.log('Error saving to Firestore: ' + response.getContentText());
+      return { success: false, error: response.getContentText() };
+    }
+  } catch (error) {
+    Logger.log('Exception saving to Firestore: ' + error.toString());
+    return { success: false, error: error.toString() };
+  }
+}
+
+function updatePlaybookByKey(sheetKey, isApproved) {
+  try {
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      "structuredQuery": {
+        "from": [{"collectionId": FIRESTORE_TABLE_PLAYBOOKS}],
+        "where": {
+          "fieldFilter": {
+            "field": {"fieldPath": "sheetKey"},
+            "op": "EQUAL",
+            "value": {"stringValue": sheetKey}
+          }
+        },
+        "limit": 1
+      }
+    };
+
+    const queryOptions = {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      payload: JSON.stringify(queryPayload)
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const queryResult = JSON.parse(queryResponse.getContentText());
+
+    if (!queryResult || !queryResult[0] || !queryResult[0].document) {
+      Logger.log('ERROR: Could not find document in Firebase with key: ' + sheetKey);
+      return;
+    }
+
+    const documentName = queryResult[0].document.name;
+    const updateUrl = `https://firestore.googleapis.com/v1/${documentName}?updateMask.fieldPaths=isApproved`;
+
+    const updatePayload = {
+      fields: {
+        isApproved: { booleanValue: isApproved }
+      }
+    };
+    
+    const updateOptions = {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      payload: JSON.stringify(updatePayload)
+    };
+
+    const updateResponse = UrlFetchApp.fetch(updateUrl, updateOptions);
+
+    if (updateResponse.getResponseCode() === 200) {
+      Logger.log('Successfully updated isApproved to ' + isApproved + ' for document: ' + documentName);
+    } else {
+      Logger.log('Error updating document: ' + updateResponse.getContentText());
+    }
+
+  } catch (error) {
+    Logger.log('Exception in updatePlaybookByKey: ' + error.toString());
+  }
+}
+
+// --- SHEET LOGIC SECTION ---
+function createPlaybookKey(email, timestamp) {
+  const data = String(email) + String(timestamp);
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, data);
+  return digest.map(b => (b < 0 ? b + 256 : b).toString(16).padStart(2, '0')).join('');
+}
+
+// --- PLAYBOOK LOGIC (SHEET TRIGGERS) ---
+function onFormSubmit(e) {
+  try {
+    const rawData = e.namedValues;
+    const sheet = e.range.getSheet();
+    const row = e.range.getRow();
+    
+    const formTimestampObject = sheet.getRange(row, 1).getValue(); 
+    const standardTimestamp = new Date(formTimestampObject).toISOString(); 
+
+    const submissionData = {
+      timestamp: standardTimestamp,
+      email: rawData['Email Address'] ? rawData['Email Address'][0] : '',
+      category: rawData['Your Tip Category:'] ? rawData['Your Tip Category:'][0] : '',
+      description: rawData['Description of Your Tip:'] ? rawData['Description of Your Tip:'][0] : '',
+      supportingMaterials: rawData['Supporting Materials:'] ? rawData['Supporting Materials:'][0] : 'N/A',
+      savedToFirebaseAt: new Date().toISOString() 
+    };
+    
+    Logger.log('Processing submission: ' + JSON.stringify(submissionData, null, 2));
+
+    const firebaseResult = savePlaybookToFirebase(submissionData);
+
+    if (firebaseResult.success) {
+      Logger.log('Successfully processed onFormSubmit');
+    } else {
+      Logger.log('ERROR in onFormSubmit (saving to Firestore): ' + firebaseResult.error);
+    }
+    
+  } catch (error) {
+    Logger.log('ERROR in onFormSubmit: ' + error.toString());
+  }
+}
+
+function checkApprovalStatus(e) {
+  try {
+    const range = e.range;
+    const sheet = range.getSheet();
+
+    if (range.getColumn() < 6 || range.getColumn() > 10) {
+      return;
+    }
+
+    const editedRow = range.getRow();
+    const approvalValues = sheet.getRange(editedRow, 6, 1, 5).getValues()[0];
+    const approvedCount = approvalValues.filter(cell => String(cell).includes("Approved")).length;
+
+    if (approvedCount >= 3) {
+      const lastColumn = sheet.getLastColumn();
+      const fullRecord = sheet.getRange(editedRow, 1, 1, lastColumn).getValues()[0];
+      
+      Logger.log(`✅ Post at row ${editedRow} is approved with ${approvedCount} votes.`);
+      
+      const sheetTimestampObject = fullRecord[0];
+      const email = fullRecord[1];     
+      
+      if (!sheetTimestampObject || !email) {
+        Logger.log('ERROR: Timestamp (Col A) or Email (Col B) is missing from row. Cannot update Firebase.');
+        return;
+      }
+
+      const standardTimestamp = new Date(sheetTimestampObject).toISOString();
+      const keyToUpdate = createPlaybookKey(email, standardTimestamp);
+      
+      Logger.log('Generated key for update: ' + keyToUpdate);
+      
+      updatePlaybookByKey(keyToUpdate, true);
+
+    } else {
+      Logger.log(`⏳ Post at row ${editedRow} is not yet approved. Approval count: ${approvedCount}`);
+    }
+  } catch (error) {
+    Logger.log('ERROR during checkApprovalStatus: ' + error.toString());
+  }
+}
+
