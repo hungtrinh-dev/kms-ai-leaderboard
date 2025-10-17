@@ -14,6 +14,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
         import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -31,6 +32,12 @@
         const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
+
+        // Initialize Firestore
+        const db = getFirestore(app);
+        window.db = db;
+        window.collection = collection;
+        window.getDocs = getDocs;
 
         // Make auth available globally
         window.auth = auth;
@@ -3892,7 +3899,8 @@
             // Initialize search functionality
             initializeSearchFunctionality();
 
-            // AI Playbooks: tabs & modal handlers
+            // AI Playbooks: 
+            //// STEP 1: tabs & modal handlers
             (function initPlaybooks() {
                 const tabs = document.querySelectorAll('.playbook-tab');
                 const grid = document.getElementById('playbooksGrid');
@@ -3953,151 +3961,148 @@
                 }
             })();
 
-            // Prepare Playbooks Step 2: load CSV and render (owner, timestamp, category mapping, approved only)
-            (function preloadPlaybooks() {
-                // We'll hook this up fully in Step 2; for now, structure and mapping are ready
-                window.parsePlaybooksCSV = function (csvText) {
-                    const lines = csvText.trim().split('\n');
-                    // Expect columns: A Timestamp, B Email Address, C Category, D Description, ... K Approval
-                    const header = lines[0];
-                    const result = [];
-                    for (let i = 1; i < lines.length; i++) {
-                        const row = parseCSVLine(lines[i]);
-                        if (!row || row.length < 11) continue;
-                        const timestamp = row[0] || '';
-                        const owner = row[1] || '';
-                        const rawCategory = row[2] || '';
-                        const description = row[3] || '';
-                        const approval = (row[10] || '').toLowerCase();
-                        if (approval !== 'approved') continue; // Column K must be Approved
+            /// STEP 2: Fetch playbooks - FIREBASE VERSION
+            async function loadPlaybooksFromFirebase() {
+                try {
+                    // Get reference to playbooks collection
+                    const playbooksCollectionRef = window.collection(window.db, 'playbooks');
+                    // Fetch all documents from playbooks collection
+                    const querySnapshot = await window.getDocs(playbooksCollectionRef);
+                    // Convert documents to array
+                    const playbooks = [];
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        playbooks.push({
+                            id: doc.id,
+                            ...data,
+                            createdAt: data.createdAt || data.timestamp || new Date()
+                        });
+                    });
+                    // Sort by creation date (newest first)
+                    playbooks.sort((a, b) => {
+                        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+                        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+                        return dateB - dateA;
+                    });
+                    return playbooks;
+                } catch (error) {
+                    console.error('❌ Error loading playbooks from Firebase:', error);
+                    return [];
+                }
+            }
 
-                        const category = mapPlaybookCategory(rawCategory);
-                        result.push({ timestamp, owner, category, description });
-                    }
-                    return result;
-                };
+            // STEP 3: Fetch and render playbooks - FIREBASE VERSION
+            function mapCategory(rawCategory) {
+                const t = (rawCategory || '').toLowerCase();
+                if (t.includes('driving operational efficiency') || t.includes('productivity')) return 'productivity';
+                if (t.includes('predictive insights') || t.includes('data') || t.includes('analysis')) return 'data';
+                if (t.includes('customer experience')) return 'cx';
+                if (t.includes('innovation') || t.includes('creativity')) return 'innovation';
+                return 'productivity';
+            }
 
-                window.mapPlaybookCategory = function (text) {
-                    const t = (text || '').toLowerCase();
-                    if (t.includes('driving operational efficiency') || t.includes('productivity')) return 'productivity';
-                    if (t.includes('predictive insights') || t.includes('data') || t.includes('analysis')) return 'data';
-                    if (t.includes('customer experience')) return 'cx';
-                    if (t.includes('innovation') || t.includes('creativity')) return 'innovation';
-                    return 'productivity';
-                };
-            })();
+            function formatTimestamp(timestamp) {
+                try {
+                    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+                    const now = new Date();
+                    const diffInMs = now - date;
+                    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+                    const diffInDays = Math.floor(diffInHours / 24);
+                    if (diffInHours < 1) return 'Just now';
+                    if (diffInHours < 24) return `${diffInHours} hours ago`;
+                    if (diffInDays < 7) return `${diffInDays} days ago`;
+                    return date.toLocaleDateString();
+                } catch (error) {
+                    console.warn('Error formatting timestamp:', error);
+                    return 'Recently';
+                }
+            }
 
-            // STEP 2: Fetch and render playbooks - MOCKUP VERSION
-            (function loadPlaybooks() {
+            (async function loadPlaybooks() {
                 const grid = document.getElementById('playbooksGrid');
                 if (!grid) return;
+                grid.innerHTML = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i><p class="mt-2">Loading playbooks...</p></div>';
 
-                // --- START OF MOCK DATA SECTION ---
-                const mockData = [
-                    {
-                        username: 'AI_Innovator',
-                        likes: 5384,
-                        comments: 125,
-                        hashtags: '#happy #photo #business #friend #show',
-                        timestamp: '4 hours ago'
-                    },
-                    {
-                        username: 'CodeWizard',
-                        likes: 4102,
-                        comments: 98,
-                        hashtags: '#dev #automation #ai #kms',
-                        timestamp: '5 hours ago'
-                    },
-                    {
-                        username: 'TechGuru',
-                        likes: 6219,
-                        comments: 231,
-                        hashtags: '#technology #future #innovation',
-                        timestamp: '8 hours ago'
-                    },
-                    {
-                        username: 'DataScientist',
-                        likes: 3847,
-                        comments: 156,
-                        hashtags: '#datascience #ml #analytics #insights',
-                        timestamp: '12 hours ago'
-                    },
-                    {
-                        username: 'ProductManager',
-                        likes: 2956,
-                        comments: 89,
-                        hashtags: '#product #strategy #userexperience #growth',
-                        timestamp: '1 day ago'
-                    },
-                    {
-                        username: 'DesignThinking',
-                        likes: 4521,
-                        comments: 167,
-                        hashtags: '#design #creativity #ux #innovation',
-                        timestamp: '1 day ago'
-                    },
-                    {
-                        username: 'CloudEngineer',
-                        likes: 3290,
-                        comments: 134,
-                        hashtags: '#cloud #infrastructure #devops #scalability',
-                        timestamp: '2 days ago'
-                    }
-                ];
-                // --- END OF MOCK DATA SECTION ---
-
-                // Clear current content (loading or error states)
+                // Load playbooks from Firebase
+                const firebasePlaybooks = await loadPlaybooksFromFirebase();
                 grid.innerHTML = '';
 
-                // Iterate through mock data and create UI elements
-                mockData.forEach((post, index) => {
-                    const postElement = document.createElement('div');
-                    postElement.className = 'insta-post';
-
-                    postElement.innerHTML = `
-                        <div class="insta-post-header">
-                            <div class="insta-post-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <span class="insta-post-username">${post.username}</span>
-                            <div class="insta-post-header-icons">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </div>
-                        </div>
-
-                        <div class="insta-post-image"></div>
-
-                        <div class="insta-post-body">
-                            <div class="insta-post-interaction-bar">
-                                <div class="insta-post-tags">${post.hashtags}</div>
-                                <div class="insta-post-icon-group">
-                                    <i class="far fa-heart"></i>
-                                    <i class="far fa-comment"></i>
-                                </div>
-                            </div>
-                            <hr>
-                            <div class="insta-post-stats">
-                                <div class="insta-post-likes">
-                                    <i class="fas fa-heart"></i>
-                                    <span>${post.likes.toLocaleString()} Likes</span>
-                                </div>
-                                <div class="insta-post-timestamp">${post.timestamp}</div>
-                            </div>
-                            <div class="insta-post-comments-link">
-                                Show all comments (${post.comments}) ↓
-                            </div>
-                        </div>
-                    `;
-                    grid.appendChild(postElement);
+                // Prepare tab filter
+                const tabs = document.querySelectorAll('.playbook-tab');
+                let activeCategory = 'productivity';
+                tabs.forEach(tab => {
+                    if (tab.classList.contains('tab-active')) {
+                        activeCategory = tab.getAttribute('data-category');
+                    }
+                    tab.addEventListener('click', () => {
+                        activeCategory = tab.getAttribute('data-category');
+                        renderPlaybooks();
+                    });
                 });
 
-                initializeSlider();
-                initializeClickEvents();
+                function renderPlaybooks() {
+                    grid.innerHTML = '';
+                    // Only show playbooks that are approved
+                    const filtered = firebasePlaybooks.filter(pb => pb.isApproved === true && mapCategory(pb.category) === activeCategory);
+                    if (filtered.length === 0) {
+                        grid.innerHTML = '<div class="text-center p-8 text-gray-500">Không có playbook nào cho category này.</div>';
+                        return;
+                    }
+                    filtered.forEach((pb) => {
+                        const postElement = document.createElement('div');
+                        postElement.className = 'insta-post';
+                        postElement.setAttribute('data-category', mapCategory(pb.category));
+                        postElement.innerHTML = `
+                            <div class="insta-post-header">
+                                <div class="insta-post-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="insta-post-username">${pb.email || ''}</span>
+                                <div class="insta-post-header-icons">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </div>
+                            </div>
+                            <div class="insta-post-image"></div>
+                            <div class="playbook-description p-3 text-gray-700 text-base">${pb.description || ''}</div>
+                            <div class="insta-post-body">
+                                <div class="insta-post-interaction-bar">
+                                    <div class="insta-post-tags">${pb.hashtags || '#ai #playbook #innovation'}</div>
+                                    <div class="insta-post-icon-group">
+                                        <i class="far fa-heart"></i>
+                                        <i class="far fa-comment"></i>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="insta-post-stats">
+                                    <div class="insta-post-likes">
+                                        <i class="fas fa-heart"></i>
+                                        <span>${pb.likes ? pb.likes.toLocaleString() : ''}</span>
+                                    </div>
+                                    <div class="insta-post-timestamp">${formatTimestamp(pb.createdAt)}</div>
+                                </div>
+                                <div class="insta-post-comments-link">
+                                    ${pb.comments ? `Show all comments (${pb.comments}) ↓` : ''}
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(postElement);
+                    });
+                    initializeSlider();
+                    initializeClickEvents();
+                }
+
+                renderPlaybooks();
             })();
 
             // Load leaderboard data after a short delay to ensure page is ready
             setTimeout(() => {
                 loadLeaderboardData();
+            }, 1500);
+
+            // Wait longer to ensure Firebase is fully initialized
+            setTimeout(async () => {
+                console.log('🧪 Testing Firebase playbooks connection...');
+                await loadPlaybooksFromFirebase();
             }, 1500);
         });
 
