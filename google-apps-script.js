@@ -537,6 +537,98 @@ function testSubmission() {
 }
 
 // --- FIREBASE INTERACTION SECTION ---
+function findDocumentNameByKey(sheetKey) {
+  try {
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      "structuredQuery": {
+        "from": [{"collectionId": FIRESTORE_TABLE_PLAYBOOKS}],
+        "where": {
+          "fieldFilter": {
+            "field": {"fieldPath": "sheetKey"},
+            "op": "EQUAL",
+            "value": {"stringValue": sheetKey}
+          }
+        },
+        "limit": 1
+      }
+    };
+    const queryOptions = {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      payload: JSON.stringify(queryPayload)
+    };
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const queryResult = JSON.parse(queryResponse.getContentText());
+
+    if (queryResult && queryResult[0] && queryResult[0].document) {
+      return queryResult[0].document.name;
+    }
+    return null;
+  } catch (error) {
+    Logger.log('ERROR in findDocumentNameByKey: ' + error.toString());
+    return null;
+  }
+}
+
+function getPlaybooksFromFirebase() {
+  try {
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    
+    const queryPayload = {
+      "structuredQuery": {
+        "from": [{"collectionId": FIRESTORE_TABLE_PLAYBOOKS}]
+      }
+    };
+
+    const queryOptions = {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const responseCode = queryResponse.getResponseCode();
+    const responseBody = queryResponse.getContentText();
+
+    if (responseCode !== 200) {
+      Logger.log('ERROR: ' + responseBody);
+      return { success: false, error: responseBody, playbooks: [] };
+    }
+    
+    const queryResult = JSON.parse(responseBody);
+    const playbooks = [];
+
+    if (queryResult && queryResult.length > 0) {
+      queryResult.forEach(result => {
+        if (result.document && result.document.fields) {
+          const fields = result.document.fields;
+          
+          playbooks.push({
+            documentName: result.document.name,
+            timestamp: fields.timestamp ? fields.timestamp.timestampValue : '',
+            owner: fields.email ? fields.email.stringValue : '',
+            category: fields.category ? fields.category.stringValue : '',
+            description: fields.description ? fields.description.stringValue : '',
+            isApproved: fields.isApproved ? fields.isApproved.booleanValue : 'N/A',
+            sheetKey: fields.sheetKey ? fields.sheetKey.stringValue : 'N/A'
+          });
+        }
+      });
+    }
+
+    Logger.log(`Found ${playbooks.length} total playbooks from Firebase.`);
+    Logger.log(JSON.stringify(playbooks, null, 2));
+    
+    return { success: true, playbooks: playbooks, count: playbooks.length };
+
+  } catch (error) {
+    Logger.log('ERROR getting playbooks from Firebase: ' + error.toString());
+    return { success: false, error: error.toString(), playbooks: [] };
+  }
+}
+
 function savePlaybookToFirebase(submissionData) {
   try {
     const url = `${FIRESTORE_BASE_URL}/${FIRESTORE_TABLE_PLAYBOOKS}`;
@@ -633,6 +725,39 @@ function updatePlaybookByKey(sheetKey, isApproved) {
   }
 }
 
+function updateFullPlaybook(documentName, data) {
+  try {
+    const updateMask = 'updateMask.fieldPaths=category&updateMask.fieldPaths=description&updateMask.fieldPaths=email&updateMask.fieldPaths=isApproved&updateMask.fieldPaths=timestamp&updateMask.fieldPaths=sheetKey';
+    const updateUrl = `https://firestore.googleapis.com/v1/${documentName}?${updateMask}`;
+
+    const firestoreData = {
+      fields: {
+        category: { stringValue: data.category || '' },
+        description: { stringValue: data.description || '' },
+        email: { stringValue: data.email || '' },
+        isApproved: { booleanValue: data.isApproved || false },
+        timestamp: { timestampValue: data.timestamp || new Date().toISOString() },
+        sheetKey: { stringValue: data.sheetKey }
+      }
+    };
+
+    const updateOptions = {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      payload: JSON.stringify(updateOptions)
+    };
+
+    const updateResponse = UrlFetchApp.fetch(updateUrl, updateOptions);
+    if (updateResponse.getResponseCode() === 200) {
+      Logger.log('Successfully UPDATED document: ' + documentName);
+    } else {
+      Logger.log('Error UPDATING document: ' + updateResponse.getContentText());
+    }
+  } catch (error) {
+    Logger.log('Exception in updateFullPlaybook: ' + error.toString());
+  }
+}
+
 // --- SHEET LOGIC SECTION ---
 function createPlaybookKey(email, timestamp) {
   const data = String(email) + String(timestamp);
@@ -714,5 +839,49 @@ function checkApprovalStatus(e) {
   } catch (error) {
     Logger.log('ERROR during checkApprovalStatus: ' + error.toString());
   }
+}
+
+function syncDataSheetToFirebase() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+  
+  Logger.log(`Starting sync for ${data.length} rows...`);
+
+  data.forEach((row, index) => {
+    const rowNumber = index + 2;
+    const sheetTimestampObject = row[0];
+    const email = row[1];
+
+    if (!sheetTimestampObject || !email) {
+      Logger.log(`Skipping row ${rowNumber}: Missing Timestamp or Email.`);
+      return;
+    }
+
+    const standardTimestamp = new Date(sheetTimestampObject).toISOString();
+    const sheetKey = createPlaybookKey(email, standardTimestamp);
+
+    const payload = {
+      timestamp: standardTimestamp,
+      email: email,
+      category: row[2] || '',
+      description: row[3] || '',
+      isApproved: (row[10] === "Approved"),
+      sheetKey: sheetKey
+    };
+    
+    const documentName = findDocumentNameByKey(sheetKey);
+
+    if (documentName) {
+      Logger.log(`Row ${rowNumber}: Found. Updating doc for key ${sheetKey}`);
+      updateFullPlaybook(documentName, payload);
+    } else {
+      Logger.log(`Row ${rowNumber}: Not found. Creating new doc for key ${sheetKey}`);
+      savePlaybookToFirebase(payload);
+    }
+  });
+
+  Logger.log('Sync completed.');
 }
 

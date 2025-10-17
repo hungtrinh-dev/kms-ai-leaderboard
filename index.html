@@ -1316,6 +1316,71 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
+        /* Slider Styles */
+        .slider-nav {
+            background-color: white;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #333;
+            z-index: 10;
+        }
+
+        #slider-prev:hover {
+            transform: translateY(-50%) translateX(-50%) scale(1.1);
+        }
+
+        #slider-next:hover {
+            transform: translateY(-50%) translateX(50%) scale(1.1);
+        }
+
+        #slider-prev:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: translateY(-50%) translateX(-50%);
+        }
+
+        #slider-next:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: translateY(-50%) translateX(50%);
+        }
+
+        #playbooksGrid .insta-post {
+            flex-shrink: 0;
+            width: calc((100% - 3rem) / 3);
+        }
+        
+        @media (max-width: 768px) {
+            .slider-nav {
+                display: none;
+            }
+            .slider-viewport {
+                overflow-x: auto;
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .slider-viewport::-webkit-scrollbar {
+                display: none;
+            }
+            
+            #playbooksGrid .insta-post {
+                 width: 80%;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+             #playbooksGrid .insta-post {
+                width: calc((100% - 1.5rem) / 2);
+            }
+        }
+
         .insta-post-header {
             display: flex;
             align-items: center;
@@ -1677,8 +1742,21 @@
             </div>
 
             <!-- Cards Grid -->
-            <div id="playbooksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Cards will be loaded dynamically from Google Sheet -->
+            <div id="playbook-slider-container" class="relative">
+                <div class="slider-viewport overflow-hidden">
+                    <div id="playbooksGrid" 
+                         class="flex gap-6 transition-transform duration-500 ease-in-out">
+                        </div>
+                </div>
+
+                <button id="slider-prev" 
+                        class="slider-nav absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 disabled:opacity-50">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="slider-next" 
+                        class="slider-nav absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 disabled:opacity-50">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
 
@@ -3983,7 +4061,6 @@
                             </div>
                             <span class="insta-post-username">${post.username}</span>
                             <div class="insta-post-header-icons">
-                                <i class="fas fa-bookmark insta-post-bookmark-icon"></i>
                                 <i class="fas fa-ellipsis-h"></i>
                             </div>
                         </div>
@@ -3996,7 +4073,6 @@
                                 <div class="insta-post-icon-group">
                                     <i class="far fa-heart"></i>
                                     <i class="far fa-comment"></i>
-                                    <i class="fas fa-arrow-up-from-bracket"></i>
                                 </div>
                             </div>
                             <hr>
@@ -4014,6 +4090,9 @@
                     `;
                     grid.appendChild(postElement);
                 });
+
+                initializeSlider();
+                initializeClickEvents();
 
                 // NOTE: Real API calling code has been commented out. When API is available, delete the mock code above and uncomment the code section below.
                 /*
@@ -4088,6 +4167,70 @@
                 loadLeaderboardData();
             }, 1500);
         });
+
+        function initializeClickEvents() {
+            const likeButtons = document.querySelectorAll('.like-button');
+            likeButtons.forEach(button => {
+                button.addEventListener('click', function(event) {
+                    const clickedIcon = event.target;
+                    clickedIcon.classList.toggle('far');
+                    clickedIcon.classList.toggle('fas');
+                    alert('Bạn vừa nhấn nút Like!');
+                });
+            });
+        }
+
+        function initializeSlider() {
+            const track = document.getElementById('playbooksGrid');
+            const prevButton = document.getElementById('slider-prev');
+            const nextButton = document.getElementById('slider-next');
+            const items = track.querySelectorAll('.insta-post');
+            
+            if (!items.length) return;
+
+            let currentIndex = 0;
+
+            function getItemsToShow() {
+                if (window.innerWidth <= 768) return 1;
+                if (window.innerWidth <= 1024) return 2;
+                return 3;
+            }
+
+            function updateSlider() {
+                const itemsToShow = getItemsToShow();
+                const totalItems = items.length;
+                const itemWidth = items[0].offsetWidth;
+                const gap = parseFloat(window.getComputedStyle(track).gap) || 24;
+                
+                const slideAmount = itemWidth + gap;
+                track.style.transform = `translateX(-${currentIndex * slideAmount}px)`;
+
+                prevButton.disabled = (currentIndex === 0);
+                nextButton.disabled = (currentIndex >= totalItems - itemsToShow);
+            }
+
+            nextButton.addEventListener('click', () => {
+                const itemsToShow = getItemsToShow();
+                if (currentIndex < items.length - itemsToShow) {
+                    currentIndex++;
+                    updateSlider();
+                }
+            });
+
+            prevButton.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateSlider();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                currentIndex = 0;
+                updateSlider();
+            });
+
+            updateSlider();
+        }
     </script>
 </body>
 
