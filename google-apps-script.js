@@ -364,6 +364,8 @@ function getLeaderboardData() {
 }
 
 // Function to get playbooks data from Form Responses sheet
+// COMMENTED OUT - Now using Firebase data instead
+/*
 function getPlaybooksData() {
   try {
     // Get the Form Responses sheet (you may need to adjust the sheet name)
@@ -449,6 +451,7 @@ function getPlaybooksData() {
     };
   }
 }
+*/
 
 // Handle GET requests for leaderboard data
 function doGet(e) {
@@ -476,7 +479,7 @@ function doGet(e) {
   // Handle playbooks data requests
   if (e.parameter && e.parameter.action === 'getPlaybooks') {
     console.log('Playbooks data requested');
-    const playbooksData = getPlaybooksData();
+    const playbooksData = getPlaybooksFromFirebase();
 
     // Check if JSONP callback is requested
     if (e.parameter.callback) {
@@ -577,7 +580,14 @@ function getPlaybooksFromFirebase() {
     
     const queryPayload = {
       "structuredQuery": {
-        "from": [{"collectionId": FIRESTORE_TABLE_PLAYBOOKS}]
+        "from": [{"collectionId": FIRESTORE_TABLE_PLAYBOOKS}],
+        "where": {
+          "fieldFilter": {
+            "field": {"fieldPath": "isApproved"},
+            "op": "EQUAL",
+            "value": {"booleanValue": true}
+          }
+        }
       }
     };
 
@@ -604,22 +614,35 @@ function getPlaybooksFromFirebase() {
       queryResult.forEach(result => {
         if (result.document && result.document.fields) {
           const fields = result.document.fields;
+          const category = fields.category ? fields.category.stringValue : '';
+          
+          // Map category to our internal categories
+          let mappedCategory = 'Productivity'; // default
+          if (category) {
+            const cat = category.toLowerCase();
+            if (cat.includes('driving operational efficiency') || cat.includes('productivity')) {
+              mappedCategory = 'Productivity';
+            } else if (cat.includes('predictive insights') || cat.includes('data') || cat.includes('analysis')) {
+              mappedCategory = 'Data & Analysis';
+            } else if (cat.includes('customer experience')) {
+              mappedCategory = 'Customer Experience';
+            } else if (cat.includes('innovation') || cat.includes('creativity')) {
+              mappedCategory = 'Innovation';
+            }
+          }
           
           playbooks.push({
-            documentName: result.document.name,
             timestamp: fields.timestamp ? fields.timestamp.timestampValue : '',
             owner: fields.email ? fields.email.stringValue : '',
-            category: fields.category ? fields.category.stringValue : '',
+            category: mappedCategory,
             description: fields.description ? fields.description.stringValue : '',
-            isApproved: fields.isApproved ? fields.isApproved.booleanValue : 'N/A',
-            sheetKey: fields.sheetKey ? fields.sheetKey.stringValue : 'N/A'
+            sheetKey: fields.sheetKey ? fields.sheetKey.stringValue : ''
           });
         }
       });
     }
 
-    Logger.log(`Found ${playbooks.length} total playbooks from Firebase.`);
-    Logger.log(JSON.stringify(playbooks, null, 2));
+    Logger.log(`Found ${playbooks.length} approved playbooks from Firebase.`);
     
     return { success: true, playbooks: playbooks, count: playbooks.length };
 
@@ -666,7 +689,7 @@ function savePlaybookToFirebase(submissionData) {
   }
 }
 
-function updatePlaybookByKey(sheetKey, isApproved) {
+function updatePlaybookApproveStatus(sheetKey, isApproved) {
   try {
     const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
     const queryPayload = {
@@ -721,11 +744,11 @@ function updatePlaybookByKey(sheetKey, isApproved) {
     }
 
   } catch (error) {
-    Logger.log('Exception in updatePlaybookByKey: ' + error.toString());
+    Logger.log('Exception in updatePlaybookApproveStatus: ' + error.toString());
   }
 }
 
-function updateFullPlaybook(documentName, data) {
+function updatePlayBookByKey(documentName, data) {
   try {
     const updateMask = 'updateMask.fieldPaths=category&updateMask.fieldPaths=description&updateMask.fieldPaths=email&updateMask.fieldPaths=isApproved&updateMask.fieldPaths=timestamp&updateMask.fieldPaths=sheetKey';
     const updateUrl = `https://firestore.googleapis.com/v1/${documentName}?${updateMask}`;
@@ -744,7 +767,7 @@ function updateFullPlaybook(documentName, data) {
     const updateOptions = {
       method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
-      payload: JSON.stringify(updateOptions)
+      payload: JSON.stringify(firestoreData) // <--- SỬA LẠI THÀNH 'firestoreData'
     };
 
     const updateResponse = UrlFetchApp.fetch(updateUrl, updateOptions);
@@ -754,7 +777,7 @@ function updateFullPlaybook(documentName, data) {
       Logger.log('Error UPDATING document: ' + updateResponse.getContentText());
     }
   } catch (error) {
-    Logger.log('Exception in updateFullPlaybook: ' + error.toString());
+    Logger.log('Exception in updatePlayBookByKey: ' + error.toString());
   }
 }
 
@@ -831,7 +854,7 @@ function checkApprovalStatus(e) {
       
       Logger.log('Generated key for update: ' + keyToUpdate);
       
-      updatePlaybookByKey(keyToUpdate, true);
+      updatePlaybookApproveStatus(keyToUpdate, true);
 
     } else {
       Logger.log(`⏳ Post at row ${editedRow} is not yet approved. Approval count: ${approvedCount}`);
@@ -875,7 +898,7 @@ function syncDataSheetToFirebase() {
 
     if (documentName) {
       Logger.log(`Row ${rowNumber}: Found. Updating doc for key ${sheetKey}`);
-      updateFullPlaybook(documentName, payload);
+      updatePlayBookByKey(documentName, payload);
     } else {
       Logger.log(`Row ${rowNumber}: Not found. Creating new doc for key ${sheetKey}`);
       savePlaybookToFirebase(payload);
@@ -884,4 +907,3 @@ function syncDataSheetToFirebase() {
 
   Logger.log('Sync completed.');
 }
-
