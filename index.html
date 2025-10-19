@@ -14,7 +14,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
         import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -38,6 +38,11 @@
         window.db = db;
         window.collection = collection;
         window.getDocs = getDocs;
+        window.addDoc = addDoc;
+        window.serverTimestamp = serverTimestamp;
+        window.query = query;
+        window.where = where;
+        window.orderBy = orderBy;
 
         // Make auth available globally
         window.auth = auth;
@@ -1332,7 +1337,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             cursor: pointer;
             transition: all 0.2s ease;
             color: #333;
@@ -1363,27 +1368,29 @@
             flex-shrink: 0;
             width: calc((100% - 3rem) / 3);
         }
-        
+
         @media (max-width: 768px) {
             .slider-nav {
                 display: none;
             }
+
             .slider-viewport {
                 overflow-x: auto;
                 -ms-overflow-style: none;
                 scrollbar-width: none;
             }
+
             .slider-viewport::-webkit-scrollbar {
                 display: none;
             }
-            
+
             #playbooksGrid .insta-post {
-                 width: 80%;
+                width: 80%;
             }
         }
 
         @media (min-width: 768px) and (max-width: 1024px) {
-             #playbooksGrid .insta-post {
+            #playbooksGrid .insta-post {
                 width: calc((100% - 1.5rem) / 2);
             }
         }
@@ -1751,17 +1758,16 @@
             <!-- Cards Grid -->
             <div id="playbook-slider-container" class="relative">
                 <div class="slider-viewport overflow-hidden">
-                    <div id="playbooksGrid" 
-                         class="flex gap-6 transition-transform duration-500 ease-in-out">
-                        </div>
+                    <div id="playbooksGrid" class="flex gap-6 transition-transform duration-500 ease-in-out">
+                    </div>
                 </div>
 
-                <button id="slider-prev" 
-                        class="slider-nav absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 disabled:opacity-50">
+                <button id="slider-prev"
+                    class="slider-nav absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 disabled:opacity-50">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <button id="slider-next" 
-                        class="slider-nav absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 disabled:opacity-50">
+                <button id="slider-next"
+                    class="slider-nav absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 disabled:opacity-50">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
@@ -4052,6 +4058,7 @@
                         const postElement = document.createElement('div');
                         postElement.className = 'insta-post';
                         postElement.setAttribute('data-category', mapCategory(pb.category));
+                        postElement.id = `playbook-${pb.id}`;
                         postElement.innerHTML = `
                             <div class="insta-post-header">
                                 <div class="insta-post-avatar">
@@ -4062,15 +4069,19 @@
                                     <i class="fas fa-ellipsis-h"></i>
                                 </div>
                             </div>
-                            <div class="insta-post-image"></div>
+                            <div class="insta-post-image"></div> 
                             <div class="playbook-description p-3 text-gray-700 text-base">${pb.description || ''}</div>
                             <div class="insta-post-body">
                                 <div class="insta-post-interaction-bar">
                                     <div class="insta-post-tags">${pb.hashtags || '#ai #playbook #innovation'}</div>
                                     <div class="insta-post-icon-group">
                                         <i class="far fa-heart"></i>
-                                        <i class="far fa-comment"></i>
-                                    </div>
+                                        
+                                        <i id="comment-icon-${pb.id}" 
+                                        data-playbook-id="${pb.id}" 
+                                        class="far fa-comment comment-icon cursor-pointer hover:text-gray-600" 
+                                        onclick="toggleCommentArea('${pb.id}')"></i> 
+                                        </div>
                                 </div>
                                 <hr>
                                 <div class="insta-post-stats">
@@ -4083,9 +4094,35 @@
                                 <div class="insta-post-comments-link">
                                     ${pb.comments ? `Show all comments (${pb.comments}) ↓` : ''}
                                 </div>
+                                <div id="comment-area-${pb.id}" class="mt-2 p-2 border-t border-gray-200 hidden">
+                                    <div class="flex items-center space-x-2">
+                                        <input 
+                                            type="text" 
+                                            id="comment-input-${pb.id}" 
+                                            placeholder="Add a comment..." 
+                                            class="flex-grow border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                        >
+                                        <button 
+                                            id="send-comment-btn-${pb.id}" 
+                                            data-playbook-id="${pb.id}"
+                                            onclick="saveComment('${pb.id}')"  
+                                            class="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 transition-colors" 
+                                            aria-label="Send comment"
+                                        >
+                                            <i class="fas fa-paper-plane text-sm"></i>
+                                        </button>
+                                    </div>
+                                    <p id="comment-error-${pb.id}" class="text-red-500 text-xs mt-1 hidden"></p> 
+                                </div>
+                                <div id="comment-list-${pb.id}" class="mt-3 px-2 max-h-40 overflow-y-auto border-t pt-2 border-gray-100">
+                                    <!-- Comments will be loaded here automatically -->
+                                </div>
                             </div>
                         `;
                         grid.appendChild(postElement);
+                        
+                        // Load comments immediately after creating the element
+                        loadAndDisplayComments(pb.id);
                     });
                     initializeSlider();
                     initializeClickEvents();
@@ -4109,7 +4146,7 @@
         function initializeClickEvents() {
             const likeButtons = document.querySelectorAll('.like-button');
             likeButtons.forEach(button => {
-                button.addEventListener('click', function(event) {
+                button.addEventListener('click', function (event) {
                     const clickedIcon = event.target;
                     clickedIcon.classList.toggle('far');
                     clickedIcon.classList.toggle('fas');
@@ -4123,7 +4160,7 @@
             const prevButton = document.getElementById('slider-prev');
             const nextButton = document.getElementById('slider-next');
             const items = track.querySelectorAll('.insta-post');
-            
+
             if (!items.length) return;
 
             let currentIndex = 0;
@@ -4139,7 +4176,7 @@
                 const totalItems = items.length;
                 const itemWidth = items[0].offsetWidth;
                 const gap = parseFloat(window.getComputedStyle(track).gap) || 24;
-                
+
                 const slideAmount = itemWidth + gap;
                 track.style.transform = `translateX(-${currentIndex * slideAmount}px)`;
 
@@ -4168,6 +4205,176 @@
             });
 
             updateSlider();
+        }
+
+        function toggleCommentArea(playbookId) {
+            if (!currentUser) {
+                console.log("User not logged in. Opening login modal.");
+                openLoginModal();
+                return;
+            }
+
+            const commentArea = document.getElementById(`comment-area-${playbookId}`);
+            const commentInput = document.getElementById(`comment-input-${playbookId}`);
+            const errorElement = document.getElementById(`comment-error-${playbookId}`);
+
+            if (!commentArea || !commentInput || !errorElement) { 
+                console.error("Missing comment elements for playbook ID:", playbookId);
+                return;
+            }
+
+            const isHidden = commentArea.classList.contains('hidden');
+
+            if (isHidden) {
+                console.log("User logged in, showing comment input area and focusing input.");
+                commentArea.classList.remove('hidden');
+                errorElement.classList.add('hidden');
+                commentInput.focus();
+            } else {
+                console.log("Hiding comment input area.");
+                commentArea.classList.add('hidden');
+                errorElement.classList.add('hidden');
+            }
+        }
+
+        async function saveComment(playbookId) {
+            console.log("Attempting to save comment for playbook:", playbookId);
+            const commentInput = document.getElementById(`comment-input-${playbookId}`);
+            const sendButton = document.getElementById(`send-comment-btn-${playbookId}`);
+            const errorElement = document.getElementById(`comment-error-${playbookId}`);
+
+            if (errorElement) errorElement.classList.add('hidden');
+
+            if (!currentUser) {
+                console.log("User not logged in.");
+                if (errorElement) {
+                    errorElement.textContent = 'Please log in to comment.';
+                    errorElement.classList.remove('hidden');
+                }
+                openLoginModal();
+                return;
+            }
+
+            const commentText = commentInput ? commentInput.value.trim() : '';
+            console.log("Comment text:", commentText);
+
+            if (!commentText) {
+                console.log("Comment is empty.");
+                if (errorElement) {
+                    errorElement.textContent = 'Comment cannot be empty.';
+                    errorElement.classList.remove('hidden');
+                }
+                commentInput?.focus();
+                return;
+            }
+
+            if (sendButton) sendButton.disabled = true;
+            const originalButtonContent = sendButton ? sendButton.innerHTML : '<i class="fas fa-paper-plane text-sm"></i>'; // Store original icon
+            if (sendButton) sendButton.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
+
+            try {
+                const commentData = {
+                    playbook_id: playbookId,
+                    comment_text: commentText,
+                    user_email: currentUser.email,
+                    created_at: window.serverTimestamp()
+                };
+                console.log("Comment data to save:", commentData);
+
+                const commentsCollectionRef = window.collection(window.db, "comments");
+                const docRef = await window.addDoc(commentsCollectionRef, commentData);
+
+                console.log("Comment saved successfully with ID:", docRef.id);
+                showNotification('success', 'Comment added successfully!');
+
+                if (commentInput) commentInput.value = '';
+                
+                // Reload and display updated comments
+                await loadAndDisplayComments(playbookId);
+
+            } catch (error) {
+                console.error("Error saving comment:", error);
+                showNotification('error', 'Failed to add comment. Please try again.');
+                if (errorElement) {
+                    errorElement.textContent = 'Error saving comment. Try again.';
+                    errorElement.classList.remove('hidden');
+                }
+            } finally {
+                if (sendButton) {
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = originalButtonContent;
+                }
+            }
+        }
+
+        async function loadAndDisplayComments(playbookId) {
+            const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
+            if (!commentListDiv) return;
+
+            commentListDiv.innerHTML = '<p class="text-xs text-gray-500 italic px-2">Loading comments...</p>';
+
+            try {
+                const commentsRef = window.collection(window.db, "comments");
+                // Temporarily remove orderBy to avoid index requirement
+                const q = window.query(
+                    commentsRef, 
+                    window.where("playbook_id", "==", playbookId)
+                );
+
+                const querySnapshot = await window.getDocs(q);
+
+                commentListDiv.innerHTML = ''; 
+
+                if (querySnapshot.empty) {
+                    commentListDiv.innerHTML = '<p class="text-xs text-gray-500 italic px-2">No comments yet.</p>';
+                } else {
+                    // Sort comments in JavaScript instead
+                    const comments = [];
+                    querySnapshot.forEach((doc) => {
+                        const commentData = doc.data();
+                        comments.push(commentData);
+                    });
+                    
+                    // Sort by created_at (oldest first)
+                    comments.sort((a, b) => {
+                        if (!a.created_at || !b.created_at) return 0;
+                        return a.created_at.toDate() - b.created_at.toDate();
+                    });
+
+                    comments.forEach((commentData) => {
+                        const commentElement = document.createElement('div');
+                        commentElement.className = 'pb-3 border-b border-gray-100 last:border-b-0';
+                        
+                        let formattedTime = '';
+                        if (commentData.created_at?.toDate) {
+                             formattedTime = commentData.created_at.toDate().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                        }
+
+                        const email = commentData.user_email || 'Anonymous';
+
+                        commentElement.innerHTML = `
+                            <div class="flex items-center space-x-2 mb-1"> 
+                                <div class="insta-post-avatar flex-shrink-0" style="width: 24px; height: 24px; margin-right: 8px;"> 
+                                    <i class="fas fa-user text-xs"></i> 
+                                </div>
+                                <div class="flex-grow text-xs text-gray-600">
+                                    <span class="font-medium text-gray-800">${email}</span>
+                                    <span class="text-gray-400 ml-2">${formattedTime}</span> 
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-800 pl-8"> 
+                                ${commentData.comment_text || ''}
+                            </p>
+                        `;
+                        commentListDiv.appendChild(commentElement);
+                    });
+                    commentListDiv.scrollTop = commentListDiv.scrollHeight; 
+                }
+
+            } catch (error) {
+                console.error("Error loading comments:", error);
+                commentListDiv.innerHTML = '<p class="text-xs text-red-500 px-2">Error loading comments.</p>';
+            }
         }
     </script>
 </body>
