@@ -4085,14 +4085,15 @@
                                 </div>
                                 <hr>
                                 <div class="insta-post-stats">
-                                    <div class="insta-post-likes">
-                                        <i class="fas fa-heart"></i>
-                                        <span>${pb.likes ? pb.likes.toLocaleString() : ''}</span>
+                                    <div class="insta-post-likes font-semibold text-sm">
+                                        <span>${pb.likes ? pb.likes.toLocaleString() : '0'} Likes</span>
                                     </div>
                                     <div class="insta-post-timestamp">${formatTimestamp(pb.createdAt)}</div>
                                 </div>
-                                <div class="insta-post-comments-link">
-                                    ${pb.comments ? `Show all comments (${pb.comments}) ↓` : ''}
+
+                                <div id="comment-link-${pb.id}" class="insta-post-comments-link cursor-pointer text-gray-600 hover:text-gray-800" onclick="toggleShowAllComments('${pb.id}')">
+                                    <span id="comment-count-${pb.id}">Show all comments (0)</span>
+                                    <span id="comment-arrow-${pb.id}">↓</span>
                                 </div>
                                 <div id="comment-area-${pb.id}" class="mt-2 p-2 border-t border-gray-200 hidden">
                                     <div class="flex items-center space-x-2">
@@ -4122,7 +4123,7 @@
                         grid.appendChild(postElement);
                         
                         // Load comments immediately after creating the element
-                        loadAndDisplayComments(pb.id);
+                        loadAndDisplayComments(pb.id, 2); // Chỉ hiển thị 2 comments ban đầu
                     });
                     initializeSlider();
                     initializeClickEvents();
@@ -4207,6 +4208,25 @@
             updateSlider();
         }
 
+        function toggleShowAllComments(playbookId) {
+            const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
+            const commentArrow = document.getElementById(`comment-arrow-${playbookId}`);
+            
+            if (!commentListDiv) return;
+
+            const isShowingAll = commentListDiv.getAttribute('data-showing-all') === 'true';
+            
+            if (isShowingAll) {
+                // Currently showing all, switch to showing only 2
+                loadAndDisplayComments(playbookId, 2);
+                if (commentArrow) commentArrow.textContent = '↓';
+            } else {
+                // Currently showing limited, switch to showing all
+                loadAndDisplayComments(playbookId);
+                if (commentArrow) commentArrow.textContent = '↑';
+            }
+        }
+
         function toggleCommentArea(playbookId) {
             if (!currentUser) {
                 console.log("User not logged in. Opening login modal.");
@@ -4289,8 +4309,16 @@
 
                 if (commentInput) commentInput.value = '';
                 
-                // Reload and display updated comments
-                await loadAndDisplayComments(playbookId);
+                // Reload comments while maintaining current view state
+                const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
+                const isShowingAll = commentListDiv?.getAttribute('data-showing-all') === 'true';
+                await loadAndDisplayComments(playbookId, isShowingAll ? null : 2);
+                
+                // Update arrow direction
+                const commentArrow = document.getElementById(`comment-arrow-${playbookId}`);
+                if (commentArrow) {
+                    commentArrow.textContent = isShowingAll ? '↑' : '↓';
+                }
 
             } catch (error) {
                 console.error("Error saving comment:", error);
@@ -4307,8 +4335,10 @@
             }
         }
 
-        async function loadAndDisplayComments(playbookId) {
+        async function loadAndDisplayComments(playbookId, limit = null) {
             const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
+            const commentCountElement = document.getElementById(`comment-count-${playbookId}`);
+            
             if (!commentListDiv) return;
 
             commentListDiv.innerHTML = '<p class="text-xs text-gray-500 italic px-2">Loading comments...</p>';
@@ -4327,6 +4357,9 @@
 
                 if (querySnapshot.empty) {
                     commentListDiv.innerHTML = '<p class="text-xs text-gray-500 italic px-2">No comments yet.</p>';
+                    if (commentCountElement) {
+                        commentCountElement.textContent = 'Show all comments (0)';
+                    }
                 } else {
                     // Sort comments in JavaScript instead
                     const comments = [];
@@ -4335,15 +4368,25 @@
                         comments.push(commentData);
                     });
                     
-                    // Sort by created_at (oldest first)
+                    // Sort by created_at (newest first - mới nhất ở trên)
                     comments.sort((a, b) => {
                         if (!a.created_at || !b.created_at) return 0;
-                        return a.created_at.toDate() - b.created_at.toDate();
+                        return b.created_at.toDate() - a.created_at.toDate(); // Đảo ngược để mới nhất ở trên
                     });
 
-                    comments.forEach((commentData) => {
+                    const totalComments = comments.length;
+                    
+                    // Update comment count
+                    if (commentCountElement) {
+                        commentCountElement.textContent = `Show all comments (${totalComments})`;
+                    }
+
+                    // Apply limit if specified
+                    const commentsToShow = limit ? comments.slice(0, limit) : comments;
+
+                    commentsToShow.forEach((commentData) => {
                         const commentElement = document.createElement('div');
-                        commentElement.className = 'pb-3 border-b border-gray-100 last:border-b-0';
+                        commentElement.className = 'pb-3 border-b border-gray-100 last:border-b-0 comment-item';
                         
                         let formattedTime = '';
                         if (commentData.created_at?.toDate) {
@@ -4368,6 +4411,11 @@
                         `;
                         commentListDiv.appendChild(commentElement);
                     });
+                    
+                    // Store total comments count in data attribute for toggle function
+                    commentListDiv.setAttribute('data-total-comments', totalComments);
+                    commentListDiv.setAttribute('data-showing-all', limit ? 'false' : 'true');
+                    
                     commentListDiv.scrollTop = commentListDiv.scrollHeight; 
                 }
 
