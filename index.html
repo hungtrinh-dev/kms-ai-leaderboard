@@ -4297,6 +4297,7 @@
                     playbook_id: playbookId,
                     comment_text: commentText,
                     user_email: currentUser.email,
+                    avatar: currentUser.photoURL || '', // User's Google profile photo or empty string
                     created_at: window.serverTimestamp()
                 };
                 console.log("Comment data to save:", commentData);
@@ -4394,11 +4395,22 @@
                         }
 
                         const email = commentData.user_email || 'Anonymous';
+                        const avatar = commentData.avatar || ''; // Get avatar from Firebase
+                        
+                        // Create avatar HTML - use real photo if available, otherwise fallback to icon
+                        const avatarHTML = avatar ? 
+                            `<img src="${avatar}" alt="User Avatar" class="w-6 h-6 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                             <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center" style="display: none;">
+                                 <i class="fas fa-user text-xs text-gray-500"></i>
+                             </div>` :
+                            `<div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                                 <i class="fas fa-user text-xs text-gray-500"></i>
+                             </div>`;
 
                         commentElement.innerHTML = `
                             <div class="flex items-center space-x-2 mb-1"> 
-                                <div class="insta-post-avatar flex-shrink-0" style="width: 24px; height: 24px; margin-right: 8px;"> 
-                                    <i class="fas fa-user text-xs"></i> 
+                                <div class="flex-shrink-0" style="margin-right: 8px;"> 
+                                    ${avatarHTML}
                                 </div>
                                 <div class="flex-grow text-xs text-gray-600">
                                     <span class="font-medium text-gray-800">${email}</span>
