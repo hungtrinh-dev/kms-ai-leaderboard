@@ -4115,7 +4115,7 @@
                                     </div>
                                     <p id="comment-error-${pb.id}" class="text-red-500 text-xs mt-1 hidden"></p> 
                                 </div>
-                                <div id="comment-list-${pb.id}" class="mt-3 px-2 max-h-40 overflow-y-auto border-t pt-2 border-gray-100">
+                                <div id="comment-list-${pb.id}" class="px-2 max-h-40 overflow-y-auto border-t border-gray-100">
                                     <!-- Comments will be loaded here automatically -->
                                 </div>
                             </div>
@@ -4123,7 +4123,18 @@
                         grid.appendChild(postElement);
                         
                         // Load comments immediately after creating the element
-                        loadAndDisplayComments(pb.id, 2); // Chỉ hiển thị 2 comments ban đầu
+                        loadAndDisplayComments(pb.id, 2);
+                        
+                        // Add Enter key event listener for comment input
+                        const commentInput = document.getElementById(`comment-input-${pb.id}`);
+                        if (commentInput) {
+                            commentInput.addEventListener('keydown', function(e) {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault(); // Prevent form submission
+                                    saveComment(pb.id);
+                                }
+                            });
+                        }
                     });
                     initializeSlider();
                     initializeClickEvents();
@@ -4139,7 +4150,6 @@
 
             // Wait longer to ensure Firebase is fully initialized
             setTimeout(async () => {
-                console.log('🧪 Testing Firebase playbooks connection...');
                 await loadPlaybooksFromFirebase();
             }, 1500);
         });
@@ -4229,7 +4239,6 @@
 
         function toggleCommentArea(playbookId) {
             if (!currentUser) {
-                console.log("User not logged in. Opening login modal.");
                 openLoginModal();
                 return;
             }
@@ -4246,27 +4255,28 @@
             const isHidden = commentArea.classList.contains('hidden');
 
             if (isHidden) {
-                console.log("User logged in, showing comment input area and focusing input.");
                 commentArea.classList.remove('hidden');
                 errorElement.classList.add('hidden');
                 commentInput.focus();
             } else {
-                console.log("Hiding comment input area.");
                 commentArea.classList.add('hidden');
                 errorElement.classList.add('hidden');
             }
         }
 
         async function saveComment(playbookId) {
-            console.log("Attempting to save comment for playbook:", playbookId);
-            const commentInput = document.getElementById(`comment-input-${playbookId}`);
+            // Prevent duplicate submissions
             const sendButton = document.getElementById(`send-comment-btn-${playbookId}`);
+            if (sendButton && sendButton.disabled) {
+                return;
+            }
+            
+            const commentInput = document.getElementById(`comment-input-${playbookId}`);
             const errorElement = document.getElementById(`comment-error-${playbookId}`);
 
             if (errorElement) errorElement.classList.add('hidden');
 
             if (!currentUser) {
-                console.log("User not logged in.");
                 if (errorElement) {
                     errorElement.textContent = 'Please log in to comment.';
                     errorElement.classList.remove('hidden');
@@ -4276,10 +4286,8 @@
             }
 
             const commentText = commentInput ? commentInput.value.trim() : '';
-            console.log("Comment text:", commentText);
 
             if (!commentText) {
-                console.log("Comment is empty.");
                 if (errorElement) {
                     errorElement.textContent = 'Comment cannot be empty.';
                     errorElement.classList.remove('hidden');
@@ -4289,7 +4297,6 @@
             }
 
             if (sendButton) sendButton.disabled = true;
-            const originalButtonContent = sendButton ? sendButton.innerHTML : '<i class="fas fa-paper-plane text-sm"></i>'; // Store original icon
             if (sendButton) sendButton.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
 
             try {
@@ -4300,12 +4307,10 @@
                     avatar: currentUser.photoURL || '', // User's Google profile photo or empty string
                     created_at: window.serverTimestamp()
                 };
-                console.log("Comment data to save:", commentData);
 
                 const commentsCollectionRef = window.collection(window.db, "comments");
                 const docRef = await window.addDoc(commentsCollectionRef, commentData);
 
-                console.log("Comment saved successfully with ID:", docRef.id);
                 showNotification('success', 'Comment added successfully!');
 
                 if (commentInput) commentInput.value = '';
@@ -4329,10 +4334,14 @@
                     errorElement.classList.remove('hidden');
                 }
             } finally {
-                if (sendButton) {
-                    sendButton.disabled = false;
-                    sendButton.innerHTML = originalButtonContent;
-                }
+                // Ensure button is always reset, even if there's an error
+                setTimeout(() => {
+                    const resetButton = document.getElementById(`send-comment-btn-${playbookId}`);
+                    if (resetButton) {
+                        resetButton.disabled = false;
+                        resetButton.innerHTML = '<i class="fas fa-paper-plane text-sm"></i>';
+                    }
+                }, 100);
             }
         }
 
@@ -4361,6 +4370,9 @@
                     if (commentCountElement) {
                         commentCountElement.textContent = 'Show all comments (0)';
                     }
+                    // Set data attributes for empty state
+                    commentListDiv.setAttribute('data-total-comments', '0');
+                    commentListDiv.setAttribute('data-showing-all', 'false');
                 } else {
                     // Sort comments in JavaScript instead
                     const comments = [];
@@ -4369,10 +4381,10 @@
                         comments.push(commentData);
                     });
                     
-                    // Sort by created_at (newest first - mới nhất ở trên)
+                    // Sort by created_at (newest first)
                     comments.sort((a, b) => {
                         if (!a.created_at || !b.created_at) return 0;
-                        return b.created_at.toDate() - a.created_at.toDate(); // Đảo ngược để mới nhất ở trên
+                        return b.created_at.toDate() - a.created_at.toDate(); // Sort newest first
                     });
 
                     const totalComments = comments.length;
@@ -4408,18 +4420,27 @@
                              </div>`;
 
                         commentElement.innerHTML = `
-                            <div class="flex items-center space-x-2 mb-1"> 
-                                <div class="flex-shrink-0" style="margin-right: 8px;"> 
-                                    ${avatarHTML}
+                            <div class="flex items-start space-x-3 mt-3 mb-1">
+                                <div class="flex-shrink-0 flex items-center" style="height: 40px;">
+                                    <img src="${avatar}" alt="User Avatar" 
+                                        class="w-10 h-10 rounded-full object-cover mx-auto"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center" style="display: none;">
+                                        <i class="fas fa-user text-lg text-gray-500"></i>
+                                    </div>
                                 </div>
-                                <div class="flex-grow text-xs text-gray-600">
-                                    <span class="font-medium text-gray-800">${email}</span>
-                                    <span class="text-gray-400 ml-2">${formattedTime}</span> 
+                                <div class="flex flex-col flex-grow justify-center">
+                                    <div class="flex justify-between items-center text-xs text-gray-600">
+                                        <span class="font-medium text-gray-800">${email}</span>
+                                        <span class="text-gray-400 ml-4">${formattedTime}</span>
+                                    </div>
+                                    <div class="pt-1">
+                                        <p class="text-sm text-gray-800">
+                                            ${commentData.comment_text || ''}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-800 pl-8"> 
-                                ${commentData.comment_text || ''}
-                            </p>
                         `;
                         commentListDiv.appendChild(commentElement);
                     });
@@ -4428,7 +4449,7 @@
                     commentListDiv.setAttribute('data-total-comments', totalComments);
                     commentListDiv.setAttribute('data-showing-all', limit ? 'false' : 'true');
                     
-                    commentListDiv.scrollTop = commentListDiv.scrollHeight; 
+                    commentListDiv.scrollTop = 0; 
                 }
 
             } catch (error) {
