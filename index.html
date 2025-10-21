@@ -14,7 +14,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
         import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -39,6 +39,8 @@
         window.collection = collection;
         window.getDocs = getDocs;
         window.addDoc = addDoc;
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
         window.serverTimestamp = serverTimestamp;
         window.query = query;
         window.where = where;
@@ -1534,6 +1536,36 @@
             color: #8e8e8e;
             cursor: pointer;
             padding-bottom: 16px;
+        }
+
+        /* Heart reaction animation */
+        .fa-heart.cursor-pointer:active {
+            animation: heart-bounce 0.3s ease-in-out;
+        }
+
+        @keyframes heart-bounce {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.3);
+            }
+        }
+
+        .fa-heart.text-red-500 {
+            animation: heart-pop 0.3s ease-in-out;
+        }
+
+        @keyframes heart-pop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
@@ -4075,7 +4107,10 @@
                                 <div class="insta-post-interaction-bar">
                                     <div class="insta-post-tags">${pb.hashtags || '#ai #playbook #innovation'}</div>
                                     <div class="insta-post-icon-group">
-                                        <i class="far fa-heart"></i>
+                                        <i id="heart-icon-${pb.id}" 
+                                           data-playbook-id="${pb.id}"
+                                           class="far fa-heart cursor-pointer hover:scale-110 transition-all duration-200" 
+                                           onclick="toggleHeartReaction('${pb.id}')"></i>
                                         
                                         <i id="comment-icon-${pb.id}" 
                                         data-playbook-id="${pb.id}" 
@@ -4086,7 +4121,7 @@
                                 <hr>
                                 <div class="insta-post-stats">
                                     <div class="insta-post-likes font-semibold text-sm">
-                                        <span>${pb.likes ? pb.likes.toLocaleString() : '0'} Likes</span>
+                                        <span id="likes-count-${pb.id}">0 Likes</span>
                                     </div>
                                     <div class="insta-post-timestamp">${formatTimestamp(pb.createdAt)}</div>
                                 </div>
@@ -4124,6 +4159,9 @@
                         
                         // Load comments immediately after creating the element
                         loadAndDisplayComments(pb.id, 2);
+                        
+                        // Load heart reactions for this playbook
+                        loadHeartReaction(pb.id);
                         
                         // Add Enter key event listener for comment input
                         const commentInput = document.getElementById(`comment-input-${pb.id}`);
@@ -4455,6 +4493,206 @@
             } catch (error) {
                 console.error("Error loading comments:", error);
                 commentListDiv.innerHTML = '<p class="text-xs text-red-500 px-2">Error loading comments.</p>';
+            }
+        }
+
+        /**
+         * HEART REACTION FEATURE
+         * Firebase Collection Design:
+         * Collection: 'reactions'
+         * Document fields:
+         *   - playbook_id: string (ID of the playbook)
+         *   - user_email: string (email of the user who reacted)
+         *   - reaction_type: string (currently 'heart', expandable for future reaction types)
+         *   - created_at: timestamp
+         * 
+         * Document ID: combination of playbook_id and user_email for uniqueness
+         */
+
+        /**
+         * Toggle heart reaction for a playbook
+         * @param {string} playbookId - The ID of the playbook
+         */
+        async function toggleHeartReaction(playbookId) {
+            // Check if user is logged in
+            if (!currentUser) {
+                showNotification('error', 'Please log in to like playbooks');
+                openLoginModal();
+                return;
+            }
+
+            const heartIcon = document.getElementById(`heart-icon-${playbookId}`);
+            if (!heartIcon) return;
+
+            // Disable the icon temporarily to prevent double-clicks
+            heartIcon.style.pointerEvents = 'none';
+            
+            try {
+                // Check if user has already reacted
+                const hasReacted = await checkUserReaction(playbookId, currentUser.email);
+                
+                if (hasReacted) {
+                    // User has already reacted, so remove the reaction (unlike)
+                    await removeHeartReaction(playbookId, currentUser.email);
+                    showNotification('success', 'Reaction removed');
+                } else {
+                    // User hasn't reacted, so add the reaction (like)
+                    await addHeartReaction(playbookId, currentUser.email);
+                    showNotification('success', 'Reaction added!');
+                }
+                
+                // Reload the reaction state to update UI
+                await loadHeartReaction(playbookId);
+                
+            } catch (error) {
+                console.error('Error toggling heart reaction:', error);
+                showNotification('error', 'Failed to update reaction. Please try again.');
+            } finally {
+                // Re-enable the icon
+                heartIcon.style.pointerEvents = 'auto';
+            }
+        }
+
+        /**
+         * Check if user has already reacted to a playbook
+         * @param {string} playbookId - The ID of the playbook
+         * @param {string} userEmail - The email of the user
+         * @returns {Promise<boolean>} - True if user has reacted, false otherwise
+         */
+        async function checkUserReaction(playbookId, userEmail) {
+            try {
+                const reactionsRef = window.collection(window.db, 'reactions');
+                const q = window.query(
+                    reactionsRef,
+                    window.where('playbook_id', '==', playbookId),
+                    window.where('user_email', '==', userEmail),
+                    window.where('reaction_type', '==', 'heart')
+                );
+                
+                const querySnapshot = await window.getDocs(q);
+                return !querySnapshot.empty;
+            } catch (error) {
+                console.error('Error checking user reaction:', error);
+                return false;
+            }
+        }
+
+        /**
+         * Add a heart reaction to a playbook
+         * @param {string} playbookId - The ID of the playbook
+         * @param {string} userEmail - The email of the user
+         */
+        async function addHeartReaction(playbookId, userEmail) {
+            try {
+                const reactionData = {
+                    playbook_id: playbookId,
+                    user_email: userEmail,
+                    reaction_type: 'heart',
+                    created_at: window.serverTimestamp()
+                };
+
+                const reactionsCollectionRef = window.collection(window.db, 'reactions');
+                await window.addDoc(reactionsCollectionRef, reactionData);
+                
+                // Track with analytics
+                if (window.analytics && window.logEvent) {
+                    window.logEvent(window.analytics, 'playbook_liked', {
+                        playbook_id: playbookId
+                    });
+                }
+            } catch (error) {
+                console.error('Error adding heart reaction:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * Remove a heart reaction from a playbook
+         * @param {string} playbookId - The ID of the playbook
+         * @param {string} userEmail - The email of the user
+         */
+        async function removeHeartReaction(playbookId, userEmail) {
+            try {
+                const reactionsRef = window.collection(window.db, 'reactions');
+                const q = window.query(
+                    reactionsRef,
+                    window.where('playbook_id', '==', playbookId),
+                    window.where('user_email', '==', userEmail),
+                    window.where('reaction_type', '==', 'heart')
+                );
+                
+                const querySnapshot = await window.getDocs(q);
+                
+                // Delete all matching documents (should only be one)
+                const deletePromises = [];
+                querySnapshot.forEach((docSnapshot) => {
+                    const docRef = window.doc(window.db, 'reactions', docSnapshot.id);
+                    deletePromises.push(window.deleteDoc(docRef));
+                });
+                
+                await Promise.all(deletePromises);
+                
+                // Track with analytics
+                if (window.analytics && window.logEvent) {
+                    window.logEvent(window.analytics, 'playbook_unliked', {
+                        playbook_id: playbookId
+                    });
+                }
+            } catch (error) {
+                console.error('Error removing heart reaction:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * Load and display heart reaction state for a playbook
+         * @param {string} playbookId - The ID of the playbook
+         */
+        async function loadHeartReaction(playbookId) {
+            const heartIcon = document.getElementById(`heart-icon-${playbookId}`);
+            const likesCountElement = document.getElementById(`likes-count-${playbookId}`);
+            
+            if (!heartIcon || !likesCountElement) return;
+
+            try {
+                // Get all reactions for this playbook
+                const reactionsRef = window.collection(window.db, 'reactions');
+                const q = window.query(
+                    reactionsRef,
+                    window.where('playbook_id', '==', playbookId),
+                    window.where('reaction_type', '==', 'heart')
+                );
+                
+                const querySnapshot = await window.getDocs(q);
+                const totalLikes = querySnapshot.size;
+                
+                // Update likes count
+                likesCountElement.textContent = `${totalLikes} ${totalLikes === 1 ? 'Like' : 'Likes'}`;
+                
+                // Check if current user has reacted
+                let currentUserReacted = false;
+                if (currentUser) {
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if (data.user_email === currentUser.email) {
+                            currentUserReacted = true;
+                        }
+                    });
+                }
+                
+                // Update heart icon appearance
+                if (currentUserReacted) {
+                    heartIcon.classList.remove('far');
+                    heartIcon.classList.add('fas');
+                    heartIcon.classList.add('text-red-500');
+                } else {
+                    heartIcon.classList.remove('fas');
+                    heartIcon.classList.remove('text-red-500');
+                    heartIcon.classList.add('far');
+                }
+            } catch (error) {
+                console.error('Error loading heart reaction:', error);
+                likesCountElement.textContent = '0 Likes';
             }
         }
     </script>

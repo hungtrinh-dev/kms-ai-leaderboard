@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Playbooks collection rules
+    match /playbooks/{playbookId} {
+      // Allow everyone to read approved playbooks (no authentication required)
+      allow read: if true;
+      
+      // Allow authenticated users to create playbooks
+      allow create: if request.auth != null;
+      
+      // Allow playbook creator or admin to update/delete
+      allow update, delete: if request.auth != null 
+                             && request.auth.token.email == resource.data.email;
+    }
+    
+    // Comments collection rules
+    match /comments/{commentId} {
+      // Allow everyone to read comments
+      allow read: if true;
+      
+      // Allow authenticated users to create comments
+      allow create: if request.auth != null
+                    && request.auth.token.email == request.resource.data.user_email;
+      
+      // Allow comment creator to delete their own comments
+      allow delete: if request.auth != null 
+                    && request.auth.token.email == resource.data.user_email;
+      
+      // Disallow updates (comments are immutable)
+      allow update: if false;
+    }
+    
+    // Reactions collection rules
+    match /reactions/{reactionId} {
+      // Allow read access to all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow users to create reactions only for themselves
+      allow create: if request.auth != null 
+                    && request.auth.token.email == request.resource.data.user_email
+                    && request.resource.data.reaction_type == 'heart'
+                    && request.resource.data.playbook_id is string;
+      
+      // Allow users to delete only their own reactions
+      allow delete: if request.auth != null 
+                    && request.auth.token.email == resource.data.user_email;
+      
+      // Disallow updates (reactions are immutable - only create/delete)
+      allow update: if false;
+    }
+  }
+}
+
