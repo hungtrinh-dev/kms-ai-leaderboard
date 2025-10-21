@@ -1450,9 +1450,22 @@
         .insta-post-image {
             width: 100%;
             padding-bottom: 100%;
-            background-color: #333;
+            background-color: #f5f5f5;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             border-top: 1px solid #efefef;
             border-bottom: 1px solid #efefef;
+            position: relative;
+        }
+
+        .insta-post-image img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* Container for everything below the image */
@@ -1544,9 +1557,12 @@
         }
 
         @keyframes heart-bounce {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
             }
+
             50% {
                 transform: scale(1.3);
             }
@@ -1560,12 +1576,43 @@
             0% {
                 transform: scale(1);
             }
+
             50% {
                 transform: scale(1.2);
             }
+
             100% {
                 transform: scale(1);
             }
+        }
+
+        /* Playbook description truncation */
+        .playbook-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.5;
+            max-height: 3em;
+            /* 2 lines * 1.5 line-height */
+        }
+
+        .show-more-btn {
+            color: #27aae1;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .show-more-btn:hover {
+            color: #1e90ff;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -1805,23 +1852,25 @@
             </div>
         </div>
 
-        <!-- Modal -->
-        <div id="playbookModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full overflow-hidden">
-                <div class="flex items-center justify-between px-5 py-4 border-b">
-                    <h3 id="modalTitle" class="text-xl font-semibold">Playbook</h3>
-                    <button id="closePlaybookModal" class="text-gray-500 hover:text-gray-700">
+        <!-- Description Modal -->
+        <div id="descriptionModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full overflow-hidden max-h-[80vh] flex flex-col">
+                <div class="flex items-center justify-between px-6 py-4 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">
+                        <i class="fas fa-align-left text-[#27aae1] mr-2"></i>Full Description
+                    </h3>
+                    <button id="closeDescriptionModal" class="text-gray-500 hover:text-gray-700 transition-colors">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
-                <div class="p-5">
-                    <div class="w-full h-40 bg-gray-200 rounded-xl mb-4"></div>
-                    <p id="modalContent" class="text-gray-700 leading-relaxed"></p>
+                <div id="descriptionModalContent" class="p-6 overflow-y-auto flex-1">
+                    <!-- Full description will be loaded here -->
                 </div>
-                <div class="px-5 py-4 border-t bg-gray-50 text-right">
-                    <button id="modalOkBtn"
-                        class="bg-[#27aae1] text-white px-5 py-2 rounded-lg font-semibold hover:opacity-90">Got
-                        it</button>
+                <div class="px-6 py-4 border-t bg-gray-50 text-right">
+                    <button id="descriptionModalOkBtn"
+                        class="bg-gradient-to-r from-[#27aae1] to-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
+                        Got it
+                    </button>
                 </div>
             </div>
         </div>
@@ -1857,6 +1906,27 @@
                     <div class="mt-4 text-xs text-gray-500">
                         By signing in, you agree to our Terms of Service and Privacy Policy
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Likes Modal -->
+    <div id="likesModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden max-h-[600px] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <h3 class="text-xl font-semibold text-gray-800">
+                    <i class="fas fa-heart text-red-500 mr-2"></i>Likes
+                </h3>
+                <button id="closeLikesModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div id="likesModalContent" class="p-6 overflow-y-auto flex-1">
+                <!-- Likes will be loaded here -->
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-3xl text-gray-400 mb-3"></i>
+                    <p class="text-gray-500">Loading likes...</p>
                 </div>
             </div>
         </div>
@@ -2731,8 +2801,47 @@
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {
                     closeLoginModal();
+                    closeLikesModal();
+                    closeDescriptionModal();
                 }
             });
+
+            // Likes modal event listeners
+            const likesModal = document.getElementById('likesModal');
+            const closeLikesModalBtn = document.getElementById('closeLikesModal');
+
+            if (closeLikesModalBtn) {
+                closeLikesModalBtn.addEventListener('click', closeLikesModal);
+            }
+
+            if (likesModal) {
+                likesModal.addEventListener('click', function (event) {
+                    if (event.target === likesModal) {
+                        closeLikesModal();
+                    }
+                });
+            }
+
+            // Description modal event listeners
+            const descriptionModal = document.getElementById('descriptionModal');
+            const closeDescriptionModalBtn = document.getElementById('closeDescriptionModal');
+            const descriptionModalOkBtn = document.getElementById('descriptionModalOkBtn');
+
+            if (closeDescriptionModalBtn) {
+                closeDescriptionModalBtn.addEventListener('click', closeDescriptionModal);
+            }
+
+            if (descriptionModalOkBtn) {
+                descriptionModalOkBtn.addEventListener('click', closeDescriptionModal);
+            }
+
+            if (descriptionModal) {
+                descriptionModal.addEventListener('click', function (event) {
+                    if (event.target === descriptionModal) {
+                        closeDescriptionModal();
+                    }
+                });
+            }
         });
 
 
@@ -2954,6 +3063,10 @@
                 if (window.analytics && window.logEvent) {
                     window.logEvent(window.analytics, 'logout');
                 }
+
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
 
                 showNotification('success', 'Signed out successfully');
 
@@ -4091,18 +4204,42 @@
                         postElement.className = 'insta-post';
                         postElement.setAttribute('data-category', mapCategory(pb.category));
                         postElement.id = `playbook-${pb.id}`;
+
+                        // Check if description is long enough to need truncation
+                        const description = pb.description || '';
+                        const needsShowMore = description.length > 120; // Approximate 2 lines worth of text
+
+                        // Store full description in data attribute for modal
+                        if (needsShowMore) {
+                            postElement.setAttribute('data-full-description', description);
+                            postElement.setAttribute('data-author-email', pb.email || '');
+                        }
+
                         postElement.innerHTML = `
                             <div class="insta-post-header">
                                 <div class="insta-post-avatar">
                                     <i class="fas fa-user"></i>
                                 </div>
-                                <span class="insta-post-username">${pb.email || ''}</span>
+                                <span class="insta-post-username">${escapeHtml(pb.email || '')}</span>
                                 <div class="insta-post-header-icons">
                                     <i class="fas fa-ellipsis-h"></i>
                                 </div>
                             </div>
-                            <div class="insta-post-image"></div> 
-                            <div class="playbook-description p-3 text-gray-700 text-base">${pb.description || ''}</div>
+                            <div class="insta-post-image">
+                                <img src="https://res.cloudinary.com/dawbc3ysp/image/upload/v1759405305/kms-ai-taskforce/kms-ai-image_ilk6jq.webp" 
+                                     alt="AI Playbook" 
+                                     loading="lazy"
+                                     onerror="this.style.display='none';">
+                            </div> 
+                            <div class="p-3 pb-2">
+                                <div class="playbook-description text-gray-700 text-base mb-2">${escapeHtml(description)}</div>
+                                ${needsShowMore ? `
+                                    <div class="show-more-btn" id="show-more-${pb.id}">
+                                        <span>Show more</span>
+                                        <i class="fas fa-chevron-down text-xs"></i>
+                                    </div>
+                                ` : ''}
+                            </div>
                             <div class="insta-post-body">
                                 <div class="insta-post-interaction-bar">
                                     <div class="insta-post-tags">${pb.hashtags || '#ai #playbook #innovation'}</div>
@@ -4156,17 +4293,29 @@
                             </div>
                         `;
                         grid.appendChild(postElement);
-                        
+
+                        // Add "Show more" button click listener
+                        if (needsShowMore) {
+                            const showMoreBtn = document.getElementById(`show-more-${pb.id}`);
+                            if (showMoreBtn) {
+                                showMoreBtn.addEventListener('click', function () {
+                                    const fullDescription = postElement.getAttribute('data-full-description');
+                                    const authorEmail = postElement.getAttribute('data-author-email');
+                                    openDescriptionModal(fullDescription, authorEmail);
+                                });
+                            }
+                        }
+
                         // Load comments immediately after creating the element
                         loadAndDisplayComments(pb.id, 2);
-                        
+
                         // Load heart reactions for this playbook
                         loadHeartReaction(pb.id);
-                        
+
                         // Add Enter key event listener for comment input
                         const commentInput = document.getElementById(`comment-input-${pb.id}`);
                         if (commentInput) {
-                            commentInput.addEventListener('keydown', function(e) {
+                            commentInput.addEventListener('keydown', function (e) {
                                 if (e.key === 'Enter') {
                                     e.preventDefault(); // Prevent form submission
                                     saveComment(pb.id);
@@ -4259,11 +4408,11 @@
         function toggleShowAllComments(playbookId) {
             const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
             const commentArrow = document.getElementById(`comment-arrow-${playbookId}`);
-            
+
             if (!commentListDiv) return;
 
             const isShowingAll = commentListDiv.getAttribute('data-showing-all') === 'true';
-            
+
             if (isShowingAll) {
                 // Currently showing all, switch to showing only 2
                 loadAndDisplayComments(playbookId, 2);
@@ -4285,7 +4434,7 @@
             const commentInput = document.getElementById(`comment-input-${playbookId}`);
             const errorElement = document.getElementById(`comment-error-${playbookId}`);
 
-            if (!commentArea || !commentInput || !errorElement) { 
+            if (!commentArea || !commentInput || !errorElement) {
                 console.error("Missing comment elements for playbook ID:", playbookId);
                 return;
             }
@@ -4308,7 +4457,7 @@
             if (sendButton && sendButton.disabled) {
                 return;
             }
-            
+
             const commentInput = document.getElementById(`comment-input-${playbookId}`);
             const errorElement = document.getElementById(`comment-error-${playbookId}`);
 
@@ -4352,12 +4501,12 @@
                 showNotification('success', 'Comment added successfully!');
 
                 if (commentInput) commentInput.value = '';
-                
+
                 // Reload comments while maintaining current view state
                 const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
                 const isShowingAll = commentListDiv?.getAttribute('data-showing-all') === 'true';
                 await loadAndDisplayComments(playbookId, isShowingAll ? null : 2);
-                
+
                 // Update arrow direction
                 const commentArrow = document.getElementById(`comment-arrow-${playbookId}`);
                 if (commentArrow) {
@@ -4386,7 +4535,7 @@
         async function loadAndDisplayComments(playbookId, limit = null) {
             const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
             const commentCountElement = document.getElementById(`comment-count-${playbookId}`);
-            
+
             if (!commentListDiv) return;
 
             commentListDiv.innerHTML = '<p class="text-xs text-gray-500 italic px-2">Loading comments...</p>';
@@ -4395,13 +4544,13 @@
                 const commentsRef = window.collection(window.db, "comments");
                 // Temporarily remove orderBy to avoid index requirement
                 const q = window.query(
-                    commentsRef, 
+                    commentsRef,
                     window.where("playbook_id", "==", playbookId)
                 );
 
                 const querySnapshot = await window.getDocs(q);
 
-                commentListDiv.innerHTML = ''; 
+                commentListDiv.innerHTML = '';
 
                 if (querySnapshot.empty) {
                     commentListDiv.innerHTML = '<p class="text-xs text-gray-500 italic px-2">No comments yet.</p>';
@@ -4418,7 +4567,7 @@
                         const commentData = doc.data();
                         comments.push(commentData);
                     });
-                    
+
                     // Sort by created_at (newest first)
                     comments.sort((a, b) => {
                         if (!a.created_at || !b.created_at) return 0;
@@ -4426,7 +4575,7 @@
                     });
 
                     const totalComments = comments.length;
-                    
+
                     // Update comment count
                     if (commentCountElement) {
                         commentCountElement.textContent = `Show all comments (${totalComments})`;
@@ -4438,17 +4587,17 @@
                     commentsToShow.forEach((commentData) => {
                         const commentElement = document.createElement('div');
                         commentElement.className = 'pb-3 border-b border-gray-100 last:border-b-0 comment-item';
-                        
+
                         let formattedTime = '';
                         if (commentData.created_at?.toDate) {
-                             formattedTime = commentData.created_at.toDate().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                            formattedTime = commentData.created_at.toDate().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
                         }
 
                         const email = commentData.user_email || 'Anonymous';
                         const avatar = commentData.avatar || ''; // Get avatar from Firebase
-                        
+
                         // Create avatar HTML - use real photo if available, otherwise fallback to icon
-                        const avatarHTML = avatar ? 
+                        const avatarHTML = avatar ?
                             `<img src="${avatar}" alt="User Avatar" class="w-6 h-6 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                              <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center" style="display: none;">
                                  <i class="fas fa-user text-xs text-gray-500"></i>
@@ -4482,12 +4631,12 @@
                         `;
                         commentListDiv.appendChild(commentElement);
                     });
-                    
+
                     // Store total comments count in data attribute for toggle function
                     commentListDiv.setAttribute('data-total-comments', totalComments);
                     commentListDiv.setAttribute('data-showing-all', limit ? 'false' : 'true');
-                    
-                    commentListDiv.scrollTop = 0; 
+
+                    commentListDiv.scrollTop = 0;
                 }
 
             } catch (error) {
@@ -4526,11 +4675,11 @@
 
             // Disable the icon temporarily to prevent double-clicks
             heartIcon.style.pointerEvents = 'none';
-            
+
             try {
                 // Check if user has already reacted
                 const hasReacted = await checkUserReaction(playbookId, currentUser.email);
-                
+
                 if (hasReacted) {
                     // User has already reacted, so remove the reaction (unlike)
                     await removeHeartReaction(playbookId, currentUser.email);
@@ -4540,10 +4689,10 @@
                     await addHeartReaction(playbookId, currentUser.email);
                     showNotification('success', 'Reaction added!');
                 }
-                
+
                 // Reload the reaction state to update UI
                 await loadHeartReaction(playbookId);
-                
+
             } catch (error) {
                 console.error('Error toggling heart reaction:', error);
                 showNotification('error', 'Failed to update reaction. Please try again.');
@@ -4568,7 +4717,7 @@
                     window.where('user_email', '==', userEmail),
                     window.where('reaction_type', '==', 'heart')
                 );
-                
+
                 const querySnapshot = await window.getDocs(q);
                 return !querySnapshot.empty;
             } catch (error) {
@@ -4587,13 +4736,15 @@
                 const reactionData = {
                     playbook_id: playbookId,
                     user_email: userEmail,
+                    user_name: currentUser.displayName || userEmail,
+                    user_avatar: currentUser.photoURL || '',
                     reaction_type: 'heart',
                     created_at: window.serverTimestamp()
                 };
 
                 const reactionsCollectionRef = window.collection(window.db, 'reactions');
                 await window.addDoc(reactionsCollectionRef, reactionData);
-                
+
                 // Track with analytics
                 if (window.analytics && window.logEvent) {
                     window.logEvent(window.analytics, 'playbook_liked', {
@@ -4620,18 +4771,18 @@
                     window.where('user_email', '==', userEmail),
                     window.where('reaction_type', '==', 'heart')
                 );
-                
+
                 const querySnapshot = await window.getDocs(q);
-                
+
                 // Delete all matching documents (should only be one)
                 const deletePromises = [];
                 querySnapshot.forEach((docSnapshot) => {
                     const docRef = window.doc(window.db, 'reactions', docSnapshot.id);
                     deletePromises.push(window.deleteDoc(docRef));
                 });
-                
+
                 await Promise.all(deletePromises);
-                
+
                 // Track with analytics
                 if (window.analytics && window.logEvent) {
                     window.logEvent(window.analytics, 'playbook_unliked', {
@@ -4651,7 +4802,7 @@
         async function loadHeartReaction(playbookId) {
             const heartIcon = document.getElementById(`heart-icon-${playbookId}`);
             const likesCountElement = document.getElementById(`likes-count-${playbookId}`);
-            
+
             if (!heartIcon || !likesCountElement) return;
 
             try {
@@ -4662,13 +4813,15 @@
                     window.where('playbook_id', '==', playbookId),
                     window.where('reaction_type', '==', 'heart')
                 );
-                
+
                 const querySnapshot = await window.getDocs(q);
                 const totalLikes = querySnapshot.size;
-                
-                // Update likes count
+
+                // Update likes count and make it clickable
                 likesCountElement.textContent = `${totalLikes} ${totalLikes === 1 ? 'Like' : 'Likes'}`;
-                
+                likesCountElement.className = 'cursor-pointer hover:underline font-semibold text-sm transition-colors hover:text-red-600';
+                likesCountElement.onclick = () => openLikesModal(playbookId);
+
                 // Check if current user has reacted
                 let currentUserReacted = false;
                 if (currentUser) {
@@ -4679,7 +4832,7 @@
                         }
                     });
                 }
-                
+
                 // Update heart icon appearance
                 if (currentUserReacted) {
                     heartIcon.classList.remove('far');
@@ -4693,6 +4846,194 @@
             } catch (error) {
                 console.error('Error loading heart reaction:', error);
                 likesCountElement.textContent = '0 Likes';
+            }
+        }
+
+        /**
+         * Open likes modal and load users who liked the playbook
+         * @param {string} playbookId - The ID of the playbook
+         */
+        async function openLikesModal(playbookId) {
+            const modal = document.getElementById('likesModal');
+            const modalContent = document.getElementById('likesModalContent');
+
+            if (!modal || !modalContent) return;
+
+            // Show modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+
+            // Show loading state
+            modalContent.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-3xl text-gray-400 mb-3"></i>
+                    <p class="text-gray-500">Loading likes...</p>
+                </div>
+            `;
+
+            try {
+                // Fetch all users who liked this playbook
+                const reactionsRef = window.collection(window.db, 'reactions');
+                const q = window.query(
+                    reactionsRef,
+                    window.where('playbook_id', '==', playbookId),
+                    window.where('reaction_type', '==', 'heart')
+                );
+
+                const querySnapshot = await window.getDocs(q);
+
+                if (querySnapshot.empty) {
+                    modalContent.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="far fa-heart text-5xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">No likes yet</p>
+                            <p class="text-sm text-gray-400 mt-2">Be the first to like this playbook!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Collect all likes data
+                const likes = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    likes.push({
+                        email: data.user_email || 'Unknown',
+                        name: data.user_name || data.user_email || 'Unknown User',
+                        avatar: data.user_avatar || '',
+                        createdAt: data.created_at
+                    });
+                });
+
+                // Sort by creation date (newest first)
+                likes.sort((a, b) => {
+                    if (!a.createdAt || !b.createdAt) return 0;
+                    const dateA = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+                    const dateB = b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+                    return dateB - dateA;
+                });
+
+                // Display likes
+                let html = `<div class="space-y-3">`;
+
+                likes.forEach((like) => {
+                    const avatarHTML = like.avatar ?
+                        `<img src="${like.avatar}" alt="${like.name}" 
+                              class="w-12 h-12 rounded-full object-cover"
+                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                         <div class="w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg" style="display: none;">
+                             ${like.name.charAt(0).toUpperCase()}
+                         </div>` :
+                        `<div class="w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                             ${like.name.charAt(0).toUpperCase()}
+                         </div>`;
+
+                    html += `
+                        <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex-shrink-0">
+                                ${avatarHTML}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-900 truncate">${like.name}</p>
+                                <p class="text-xs text-gray-500 truncate">${like.email}</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-heart text-red-500 text-lg"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                modalContent.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading likes:', error);
+                modalContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-3xl text-red-400 mb-3"></i>
+                        <p class="text-gray-700 font-semibold">Error loading likes</p>
+                        <p class="text-sm text-gray-500 mt-2">Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Close likes modal
+         */
+        function closeLikesModal() {
+            const modal = document.getElementById('likesModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         * @param {string} text - The text to escape
+         * @returns {string} - Escaped text
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Open description modal with full text
+         * @param {string} description - The full description text to display
+         * @param {string} email - The email of the playbook author (optional)
+         */
+        function openDescriptionModal(description, email = '') {
+            const modal = document.getElementById('descriptionModal');
+            const modalContent = document.getElementById('descriptionModalContent');
+
+            if (!modal || !modalContent) return;
+
+            // Show modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+
+            // Display full description with nice formatting
+            let html = '';
+
+            if (email) {
+                html += `
+                    <div class="flex items-center space-x-3 mb-4 pb-4 border-b">
+                        <div class="w-10 h-10 bg-gradient-to-br from-[#27aae1] to-blue-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Posted by</p>
+                            <p class="text-sm text-gray-600">${escapeHtml(email)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="prose prose-sm max-w-none">
+                    <p class="text-gray-700 text-base leading-relaxed whitespace-pre-wrap">${escapeHtml(description || 'No description available.')}</p>
+                </div>
+            `;
+
+            modalContent.innerHTML = html;
+        }
+
+        /**
+         * Close description modal
+         */
+        function closeDescriptionModal() {
+            const modal = document.getElementById('descriptionModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
             }
         }
     </script>
