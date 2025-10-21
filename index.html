@@ -1567,6 +1567,21 @@
                 transform: scale(1);
             }
         }
+
+        /* Auto-resize textarea for comments */
+        .auto-resize-textarea {
+            resize: none;
+            overflow: hidden;
+            min-height: 38px; /* Equivalent to py-2 (8px top + 8px bottom) + line-height */
+            max-height: calc(1.5em * 5 + 16px); /* 5 lines max + padding */
+            line-height: 1.5;
+            transition: height 0.2s ease;
+        }
+
+        .auto-resize-textarea.scrollable {
+            overflow-y: auto;
+            max-height: calc(1.5em * 5 + 16px);
+        }
     </style>
 </head>
 
@@ -4126,23 +4141,23 @@
                                     <div class="insta-post-timestamp">${formatTimestamp(pb.createdAt)}</div>
                                 </div>
 
-                                <div id="comment-link-${pb.id}" class="insta-post-comments-link cursor-pointer text-gray-600 hover:text-gray-800" onclick="toggleShowAllComments('${pb.id}')">
+                                <div id="comment-link-${pb.id}" class="insta-post-comments-link cursor-pointer text-gray-600 hover:text-gray-800 flex items-center space-x-1" onclick="toggleShowAllComments('${pb.id}')">
                                     <span id="comment-count-${pb.id}">Show all comments (0)</span>
                                     <span id="comment-arrow-${pb.id}">↓</span>
                                 </div>
                                 <div id="comment-area-${pb.id}" class="mt-2 p-2 border-t border-gray-200 hidden">
-                                    <div class="flex items-center space-x-2">
-                                        <input 
-                                            type="text" 
+                                    <div class="flex items-start space-x-2">
+                                        <textarea 
                                             id="comment-input-${pb.id}" 
                                             placeholder="Add a comment..." 
-                                            class="flex-grow border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-                                        >
+                                            class="auto-resize-textarea flex-grow border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                            rows="1"
+                                        ></textarea>
                                         <button 
                                             id="send-comment-btn-${pb.id}" 
                                             data-playbook-id="${pb.id}"
                                             onclick="saveComment('${pb.id}')"  
-                                            class="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 transition-colors" 
+                                            class="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 transition-colors mt-1" 
                                             aria-label="Send comment"
                                         >
                                             <i class="fas fa-paper-plane text-sm"></i>
@@ -4158,24 +4173,16 @@
                         grid.appendChild(postElement);
                         
                         // Load comments immediately after creating the element
-                        loadAndDisplayComments(pb.id, 2);
+                        loadAndDisplayComments(pb.id, 3);
                         
                         // Load heart reactions for this playbook
                         loadHeartReaction(pb.id);
-                        
-                        // Add Enter key event listener for comment input
-                        const commentInput = document.getElementById(`comment-input-${pb.id}`);
-                        if (commentInput) {
-                            commentInput.addEventListener('keydown', function(e) {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault(); // Prevent form submission
-                                    saveComment(pb.id);
-                                }
-                            });
-                        }
                     });
                     initializeSlider();
                     initializeClickEvents();
+                    
+                    // Setup auto-resize for comment textareas
+                    setupAutoResizeTextareas();
                 }
 
                 renderPlaybooks();
@@ -4266,7 +4273,7 @@
             
             if (isShowingAll) {
                 // Currently showing all, switch to showing only 2
-                loadAndDisplayComments(playbookId, 2);
+                loadAndDisplayComments(playbookId, 3);
                 if (commentArrow) commentArrow.textContent = '↓';
             } else {
                 // Currently showing limited, switch to showing all
@@ -4296,10 +4303,54 @@
                 commentArea.classList.remove('hidden');
                 errorElement.classList.add('hidden');
                 commentInput.focus();
+                // Setup auto-resize for this specific textarea
+                autoResizeTextarea(commentInput);
             } else {
                 commentArea.classList.add('hidden');
                 errorElement.classList.add('hidden');
             }
+        }
+
+        // Auto-resize textarea function
+        function autoResizeTextarea(textarea) {
+            // Reset height to auto to get the correct scrollHeight
+            textarea.style.height = 'auto';
+            
+            const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight);
+            const paddingTop = parseFloat(getComputedStyle(textarea).paddingTop);
+            const paddingBottom = parseFloat(getComputedStyle(textarea).paddingBottom);
+            const maxLines = 5;
+            const minHeight = lineHeight + paddingTop + paddingBottom;
+            const maxHeight = (lineHeight * maxLines) + paddingTop + paddingBottom;
+            
+            let newHeight = textarea.scrollHeight;
+            
+            if (newHeight < minHeight) {
+                newHeight = minHeight;
+            }
+            
+            if (newHeight > maxHeight) {
+                newHeight = maxHeight;
+                textarea.classList.add('scrollable');
+            } else {
+                textarea.classList.remove('scrollable');
+            }
+            
+            textarea.style.height = newHeight + 'px';
+        }
+
+        // Setup auto-resize for all comment textareas
+        function setupAutoResizeTextareas() {
+            const textareas = document.querySelectorAll('.auto-resize-textarea');
+            textareas.forEach(textarea => {
+                // Handle input event for auto-resize
+                textarea.addEventListener('input', function() {
+                    autoResizeTextarea(this);
+                });
+                
+                // Initial resize
+                autoResizeTextarea(textarea);
+            });
         }
 
         async function saveComment(playbookId) {
@@ -4351,12 +4402,16 @@
 
                 showNotification('success', 'Comment added successfully!');
 
-                if (commentInput) commentInput.value = '';
+                if (commentInput) {
+                    commentInput.value = '';
+                    // Reset textarea height after clearing content
+                    autoResizeTextarea(commentInput);
+                }
                 
                 // Reload comments while maintaining current view state
                 const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
                 const isShowingAll = commentListDiv?.getAttribute('data-showing-all') === 'true';
-                await loadAndDisplayComments(playbookId, isShowingAll ? null : 2);
+                await loadAndDisplayComments(playbookId, isShowingAll ? null : 3);
                 
                 // Update arrow direction
                 const commentArrow = document.getElementById(`comment-arrow-${playbookId}`);
@@ -4386,6 +4441,8 @@
         async function loadAndDisplayComments(playbookId, limit = null) {
             const commentListDiv = document.getElementById(`comment-list-${playbookId}`);
             const commentCountElement = document.getElementById(`comment-count-${playbookId}`);
+            const commentLinkElement = document.getElementById(`comment-link-${playbookId}`);
+            const commentArrow = document.getElementById(`comment-arrow-${playbookId}`);
             
             if (!commentListDiv) return;
 
@@ -4404,14 +4461,20 @@
                 commentListDiv.innerHTML = ''; 
 
                 if (querySnapshot.empty) {
-                    commentListDiv.innerHTML = '<p class="text-xs text-gray-500 italic px-2">No comments yet.</p>';
-                    if (commentCountElement) {
-                        commentCountElement.textContent = 'Show all comments (0)';
+                    // Hide both comment list and show all comments button when no comments
+                    commentListDiv.style.display = 'none';
+                    if (commentLinkElement) {
+                        commentLinkElement.style.display = 'none';
                     }
                     // Set data attributes for empty state
                     commentListDiv.setAttribute('data-total-comments', '0');
                     commentListDiv.setAttribute('data-showing-all', 'false');
                 } else {
+                    // Show comment list and show all comments button when comments exist
+                    commentListDiv.style.display = 'block';
+                    if (commentLinkElement) {
+                        commentLinkElement.style.display = 'flex';
+                    }
                     // Sort comments in JavaScript instead
                     const comments = [];
                     querySnapshot.forEach((doc) => {
@@ -4427,9 +4490,15 @@
 
                     const totalComments = comments.length;
                     
-                    // Update comment count
+                    // Update comment count and text based on current state
                     if (commentCountElement) {
-                        commentCountElement.textContent = `Show all comments (${totalComments})`;
+                        if (limit && totalComments > limit) {
+                            // Showing limited comments
+                            commentCountElement.textContent = `Show all comments (${totalComments})`;
+                        } else {
+                            // Showing all comments
+                            commentCountElement.textContent = `Hide comments`;
+                        }
                     }
 
                     // Apply limit if specified
