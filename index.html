@@ -1413,15 +1413,24 @@
             width: calc((100% - 3rem) / 3);
         }
 
+        /* Slider viewport styles */
+        .slider-viewport {
+            position: relative;
+            overflow: hidden;
+        }
+
         @media (max-width: 768px) {
             .slider-nav {
-                display: none;
+                display: none !important;
             }
 
             .slider-viewport {
                 overflow-x: auto;
                 -ms-overflow-style: none;
                 scrollbar-width: none;
+                touch-action: pan-x;
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
             }
 
             .slider-viewport::-webkit-scrollbar {
@@ -1430,6 +1439,14 @@
 
             #playbooksGrid .insta-post {
                 width: 80%;
+                scroll-snap-align: center;
+                -webkit-scroll-snap-align: center;
+            }
+
+            /* Enable smooth touch scrolling */
+            #playbooksGrid {
+                scroll-snap-type: x mandatory;
+                -webkit-scroll-snap-type: x mandatory;
             }
         }
 
@@ -4410,11 +4427,15 @@
             const track = document.getElementById('playbooksGrid');
             const prevButton = document.getElementById('slider-prev');
             const nextButton = document.getElementById('slider-next');
+            const viewport = document.querySelector('.slider-viewport');
             const items = track.querySelectorAll('.insta-post');
 
             if (!items.length) return;
 
             let currentIndex = 0;
+            let startX = 0;
+            let isDragging = false;
+            let isMobile = window.innerWidth <= 768;
 
             function getItemsToShow() {
                 if (window.innerWidth <= 768) return 1;
@@ -4425,33 +4446,137 @@
             function updateSlider() {
                 const itemsToShow = getItemsToShow();
                 const totalItems = items.length;
-                const itemWidth = items[0].offsetWidth;
-                const gap = parseFloat(window.getComputedStyle(track).gap) || 24;
+                isMobile = window.innerWidth <= 768;
 
-                const slideAmount = itemWidth + gap;
-                track.style.transform = `translateX(-${currentIndex * slideAmount}px)`;
+                if (isMobile) {
+                    // On mobile, use scroll-based navigation
+                    const itemWidth = items[0].offsetWidth;
+                    const gap = parseFloat(window.getComputedStyle(track).gap) || 24;
+                    const scrollLeft = currentIndex * (itemWidth + gap);
+                    viewport.scrollLeft = scrollLeft;
+                } else {
+                    // On desktop, use transform-based navigation
+                    const itemWidth = items[0].offsetWidth;
+                    const gap = parseFloat(window.getComputedStyle(track).gap) || 24;
+                    const slideAmount = itemWidth + gap;
+                    track.style.transform = `translateX(-${currentIndex * slideAmount}px)`;
+                }
 
-                prevButton.disabled = (currentIndex === 0);
-                nextButton.disabled = (currentIndex >= totalItems - itemsToShow);
+                if (prevButton && nextButton) {
+                    prevButton.disabled = (currentIndex === 0);
+                    nextButton.disabled = (currentIndex >= totalItems - itemsToShow);
+                }
             }
 
-            nextButton.addEventListener('click', () => {
-                const itemsToShow = getItemsToShow();
-                if (currentIndex < items.length - itemsToShow) {
-                    currentIndex++;
-                    updateSlider();
-                }
-            });
+            // Touch/Swipe events for mobile
+            function handleTouchStart(e) {
+                if (!isMobile) return;
+                startX = e.touches[0].clientX;
+                isDragging = true;
+            }
 
-            prevButton.addEventListener('click', () => {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    updateSlider();
+            function handleTouchMove(e) {
+                if (!isMobile || !isDragging) return;
+                e.preventDefault();
+            }
+
+            function handleTouchEnd(e) {
+                if (!isMobile || !isDragging) return;
+                isDragging = false;
+                
+                const endX = e.changedTouches[0].clientX;
+                const diffX = startX - endX;
+                const threshold = 50; // Minimum swipe distance
+
+                if (Math.abs(diffX) > threshold) {
+                    const itemsToShow = getItemsToShow();
+                    if (diffX > 0 && currentIndex < items.length - itemsToShow) {
+                        // Swipe left - next
+                        currentIndex++;
+                        updateSlider();
+                    } else if (diffX < 0 && currentIndex > 0) {
+                        // Swipe right - previous
+                        currentIndex--;
+                        updateSlider();
+                    }
                 }
-            });
+            }
+
+            // Mouse events for desktop (optional - for drag support)
+            function handleMouseDown(e) {
+                if (isMobile) return;
+                startX = e.clientX;
+                isDragging = true;
+                viewport.style.cursor = 'grabbing';
+            }
+
+            function handleMouseMove(e) {
+                if (isMobile || !isDragging) return;
+                e.preventDefault();
+            }
+
+            function handleMouseUp(e) {
+                if (isMobile || !isDragging) return;
+                isDragging = false;
+                viewport.style.cursor = 'grab';
+                
+                const endX = e.clientX;
+                const diffX = startX - endX;
+                const threshold = 50;
+
+                if (Math.abs(diffX) > threshold) {
+                    const itemsToShow = getItemsToShow();
+                    if (diffX > 0 && currentIndex < items.length - itemsToShow) {
+                        currentIndex++;
+                        updateSlider();
+                    } else if (diffX < 0 && currentIndex > 0) {
+                        currentIndex--;
+                        updateSlider();
+                    }
+                }
+            }
+
+            // Button event listeners
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    const itemsToShow = getItemsToShow();
+                    if (currentIndex < items.length - itemsToShow) {
+                        currentIndex++;
+                        updateSlider();
+                    }
+                });
+            }
+
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    if (currentIndex > 0) {
+                        currentIndex--;
+                        updateSlider();
+                    }
+                });
+            }
+
+            // Touch events
+            if (viewport) {
+                viewport.addEventListener('touchstart', handleTouchStart, { passive: true });
+                viewport.addEventListener('touchmove', handleTouchMove, { passive: false });
+                viewport.addEventListener('touchend', handleTouchEnd, { passive: true });
+                
+                // Mouse events for desktop drag (optional)
+                viewport.addEventListener('mousedown', handleMouseDown);
+                viewport.addEventListener('mousemove', handleMouseMove);
+                viewport.addEventListener('mouseup', handleMouseUp);
+                viewport.addEventListener('mouseleave', handleMouseUp);
+                
+                // Set cursor style for desktop
+                if (!isMobile) {
+                    viewport.style.cursor = 'grab';
+                }
+            }
 
             window.addEventListener('resize', () => {
                 currentIndex = 0;
+                isMobile = window.innerWidth <= 768;
                 updateSlider();
             });
 
