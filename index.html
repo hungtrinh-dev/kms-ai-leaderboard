@@ -1701,6 +1701,35 @@
             text-decoration: underline;
         }
 
+        /* Supporting materials link */
+        .supporting-materials-link {
+            color: #27aae1 !important;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: all 0.2s ease;
+            padding: 0;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        .supporting-materials-link:hover {
+            color: #1e90ff !important;
+            text-decoration: none;
+            border-bottom: 1px solid #27aae1;
+            transform: translateX(2px);
+        }
+
+        .supporting-materials-link:active {
+            transform: translateX(0);
+        }
+
+        .supporting-materials-link:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+
         /* Auto-resize textarea for comments */
         .auto-resize-textarea {
             resize: none;
@@ -2036,6 +2065,25 @@
                     <i class="fas fa-spinner fa-spin text-3xl text-gray-400 mb-3"></i>
                     <p class="text-gray-500">Loading likes...</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attachments Modal -->
+    <div id="attachmentsModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <h3 class="text-xl font-semibold text-gray-800">
+                    <i class="fas fa-paperclip text-blue-500 mr-2"></i>Supporting Materials
+                </h3>
+                <button onclick="closeAttachmentsModal()" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <ul id="attachmentsList" class="space-y-3">
+                    <!-- Attachments will be loaded here -->
+                </ul>
             </div>
         </div>
     </div>
@@ -2906,6 +2954,16 @@
                     }
                 });
             }
+
+            // Attachments modal event listeners
+            const attachmentsModal = document.getElementById('attachmentsModal');
+            if (attachmentsModal) {
+                attachmentsModal.addEventListener('click', function (event) {
+                    if (event.target === attachmentsModal) {
+                        closeAttachmentsModal();
+                    }
+                });
+            }
         });
 
 
@@ -2931,6 +2989,49 @@
         // Global variables for authentication
         let currentUser = null;
         let authInitialized = false;
+
+        // Supporting materials modal functions
+        function openAttachmentsModal(urls) {
+            const modal = document.getElementById('attachmentsModal');
+            const attachmentsList = document.getElementById('attachmentsList');
+            
+            // Clear previous content
+            attachmentsList.innerHTML = '';
+            
+            // Add each URL as a list item
+            urls.forEach((url, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'mb-2';
+                const link = document.createElement('a');
+                link.href = url.trim();
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.className = 'inline-flex items-center text-base font-semibold transition-colors duration-200 block break-all';
+                link.style.color = '#27aae1';
+                link.innerHTML = `<i class="fas fa-external-link-alt mr-2"></i>Attachment ${index + 1}`;
+                
+                // Add hover effects
+                link.addEventListener('mouseenter', function() {
+                    this.style.color = '#1e90ff';
+                });
+                link.addEventListener('mouseleave', function() {
+                    this.style.color = '#27aae1';
+                });
+                
+                listItem.appendChild(link);
+                attachmentsList.appendChild(listItem);
+            });
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function closeAttachmentsModal() {
+            const modal = document.getElementById('attachmentsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
 
         // Create default avatar with user initials
         function createDefaultAvatar(userName) {
@@ -4189,6 +4290,11 @@
                             postElement.setAttribute('data-author-email', pb.email || '');
                         }
 
+                        // Process supporting materials
+                        const supportingMaterials = pb.supportingMaterials ? pb.supportingMaterials.split(',').map(link => link.trim()).filter(link => link) : [];
+                        const hasSupportingMaterials = supportingMaterials.length > 0;
+                        const singleLink = supportingMaterials.length === 1;
+
                         postElement.innerHTML = `
                             <div class="insta-post-header">
                                 <div class="insta-post-avatar">
@@ -4211,6 +4317,25 @@
                                     <div class="show-more-btn" id="show-more-${pb.id}">
                                         <span>Show more</span>
                                         <i class="fas fa-chevron-down text-xs"></i>
+                                    </div>
+                                ` : ''}
+                                ${hasSupportingMaterials ? `
+                                    <div class="mt-2">
+                                        ${singleLink ? `
+                                            <a href="${supportingMaterials[0]}" target="_blank" rel="noopener noreferrer" 
+                                               class="supporting-materials-link inline-flex items-center text-sm font-medium transition-colors duration-200">
+                                                <i class="fas fa-paperclip mr-1"></i>
+                                                <span>Link to attachment</span>
+                                                <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+                                            </a>
+                                        ` : `
+                                            <button onclick="openAttachmentsModal(${JSON.stringify(supportingMaterials).replace(/"/g, '&quot;')})" 
+                                                    class="supporting-materials-link inline-flex items-center text-sm font-medium transition-colors duration-200 bg-transparent border-none cursor-pointer">
+                                                <i class="fas fa-paperclip mr-1"></i>
+                                                <span>Attachments (${supportingMaterials.length})</span>
+                                                <i class="fas fa-list ml-1 text-xs"></i>
+                                            </button>
+                                        `}
                                     </div>
                                 ` : ''}
                             </div>
