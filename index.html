@@ -1428,7 +1428,7 @@
                 overflow-x: auto;
                 -ms-overflow-style: none;
                 scrollbar-width: none;
-                touch-action: pan-x;
+                touch-action: pan-y pinch-zoom;
                 -webkit-overflow-scrolling: touch;
                 scroll-behavior: smooth;
             }
@@ -1437,16 +1437,23 @@
                 display: none;
             }
 
+            #playbooksGrid {
+                touch-action: pan-x;
+                scroll-snap-type: x mandatory;
+                -webkit-scroll-snap-type: x mandatory;
+            }
+
             #playbooksGrid .insta-post {
                 width: 80%;
                 scroll-snap-align: center;
                 -webkit-scroll-snap-align: center;
+                touch-action: pan-y pinch-zoom;
+                overflow-y: auto;
             }
 
-            /* Enable smooth touch scrolling */
-            #playbooksGrid {
-                scroll-snap-type: x mandatory;
-                -webkit-scroll-snap-type: x mandatory;
+            /* Allow scrolling within post content */
+            #playbooksGrid .insta-post * {
+                touch-action: pan-y pinch-zoom;
             }
         }
 
@@ -4434,6 +4441,7 @@
 
             let currentIndex = 0;
             let startX = 0;
+            let startY = 0;
             let isDragging = false;
             let isMobile = window.innerWidth <= 768;
 
@@ -4472,17 +4480,27 @@
             function handleTouchStart(e) {
                 if (!isMobile) return;
                 startX = e.touches[0].clientX;
-                isDragging = true;
+                startY = e.touches[0].clientY;
+                isDragging = false; // Don't set to true immediately
             }
 
             function handleTouchMove(e) {
-                if (!isMobile || !isDragging) return;
-                e.preventDefault();
+                if (!isMobile) return;
+                
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const diffX = Math.abs(currentX - startX);
+                const diffY = Math.abs(currentY - startY);
+                
+                // Only prevent default if horizontal swipe is more significant than vertical
+                if (diffX > diffY && diffX > 10) {
+                    isDragging = true;
+                    e.preventDefault();
+                }
             }
 
             function handleTouchEnd(e) {
                 if (!isMobile || !isDragging) return;
-                isDragging = false;
                 
                 const endX = e.changedTouches[0].clientX;
                 const diffX = startX - endX;
@@ -4500,6 +4518,8 @@
                         updateSlider();
                     }
                 }
+                
+                isDragging = false;
             }
 
             // Mouse events for desktop (optional - for drag support)
