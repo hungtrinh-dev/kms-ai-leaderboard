@@ -3620,7 +3620,7 @@
 
             } catch (error) {
                 console.error('Error loading leaderboard data:', error);
-                
+
                 // Retry on exception
                 if (retryCount < MAX_RETRIES) {
                     console.log(`Retrying after exception... (${retryCount + 1}/${MAX_RETRIES})`);
@@ -5025,7 +5025,6 @@
         async function toggleHeartReaction(playbookId) {
             // Check if user is logged in
             if (!currentUser) {
-                showNotification('error', 'Please log in to like playbooks');
                 openLoginModal();
                 return;
             }
