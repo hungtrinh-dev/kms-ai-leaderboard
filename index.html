@@ -3477,7 +3477,8 @@
         }
 
         // Load leaderboard data from Google Apps Script
-        function loadLeaderboardData() {
+        function loadLeaderboardData(retryCount = 0) {
+            const MAX_RETRIES = 3;
 
             try {
                 // Show loading state
@@ -3504,6 +3505,7 @@
                             <div class="text-center py-16 bg-gray-50/30">
                                 <i class="fas fa-spinner fa-spin text-4xl mb-4 text-[#27aae1]"></i>
                                 <div class="font-semibold text-gray-600">Loading leaderboard data...</div>
+                                ${retryCount > 0 ? `<div class="text-sm text-gray-500 mt-2">Retry attempt ${retryCount}/${MAX_RETRIES}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -3539,8 +3541,20 @@
                             // Team tab is active
                             displayLeaderboardData(cachedLeaderboardData.team, true);
                         }
+
+                        // Show success notification on retry
+                        if (retryCount > 0) {
+                            showNotification('success', 'Leaderboard loaded successfully!');
+                        }
                     } else {
-                        tryCSVFallback();
+                        if (retryCount < MAX_RETRIES) {
+                            console.log(`API returned error, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+                            setTimeout(() => {
+                                loadLeaderboardData(retryCount + 1);
+                            }, 2000 * (retryCount + 1)); // Exponential backoff
+                        } else {
+                            tryCSVFallback();
+                        }
                     }
 
                     // Cleanup
@@ -3554,7 +3568,19 @@
                     if (callbackExecuted) return;
                     callbackExecuted = true;
 
-                    tryCSVFallback();
+                    console.error('Script load error, retry count:', retryCount);
+
+                    // Retry logic with exponential backoff
+                    if (retryCount < MAX_RETRIES) {
+                        console.log(`Retrying after error... (${retryCount + 1}/${MAX_RETRIES})`);
+                        setTimeout(() => {
+                            loadLeaderboardData(retryCount + 1);
+                        }, 2000 * (retryCount + 1)); // 2s, 4s, 6s
+                    } else {
+                        console.error('Max retries reached, falling back to CSV');
+                        showNotification('error', 'Failed to load leaderboard. Using backup data.');
+                        tryCSVFallback();
+                    }
 
                     // Cleanup
                     if (script.parentNode) {
@@ -3563,25 +3589,49 @@
                     delete window[callbackName];
                 };
 
-                script.src = LEADERBOARD_API_URL + '&callback=' + callbackName;
+                // Add cache-busting parameter to prevent caching issues
+                const cacheBuster = '&t=' + Date.now();
+                script.src = LEADERBOARD_API_URL + '&callback=' + callbackName + cacheBuster;
                 document.body.appendChild(script);
 
-                // Timeout fallback
+                // Timeout fallback with retry
                 setTimeout(() => {
                     if (!callbackExecuted) {
                         callbackExecuted = true;
-                        tryCSVFallback();
+                        console.error('Request timeout, retry count:', retryCount);
+
+                        if (retryCount < MAX_RETRIES) {
+                            console.log(`Retrying after timeout... (${retryCount + 1}/${MAX_RETRIES})`);
+                            setTimeout(() => {
+                                loadLeaderboardData(retryCount + 1);
+                            }, 2000 * (retryCount + 1));
+                        } else {
+                            console.error('Max retries reached after timeout, falling back to CSV');
+                            showNotification('error', 'Connection timeout. Using backup data.');
+                            tryCSVFallback();
+                        }
 
                         if (script.parentNode) {
                             document.body.removeChild(script);
                         }
                         delete window[callbackName];
                     }
-                }, 5000); // 5 second timeout
+                }, 10000); // 10 second timeout (increased from 5s)
 
             } catch (error) {
                 console.error('Error loading leaderboard data:', error);
-                displayEmptyLeaderboard();
+                
+                // Retry on exception
+                if (retryCount < MAX_RETRIES) {
+                    console.log(`Retrying after exception... (${retryCount + 1}/${MAX_RETRIES})`);
+                    setTimeout(() => {
+                        loadLeaderboardData(retryCount + 1);
+                    }, 2000 * (retryCount + 1));
+                } else {
+                    console.error('Max retries reached after exception');
+                    showNotification('error', 'Failed to load leaderboard data.');
+                    displayEmptyLeaderboard();
+                }
             }
         }
 
