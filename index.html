@@ -3330,161 +3330,17 @@
         // Google Form integration - opens in new tab
         // No embed functionality needed
 
-        // Google Apps Script API for leaderboard data
-        const LEADERBOARD_API_URL = GOOGLE_SCRIPT_URL + '?action=getLeaderboard';
+        // Firebase Collections for leaderboard data (NEW APPROACH - No CORS issues!)
+        const INDIVIDUAL_LEADERBOARD_COLLECTION = 'individual-leaderboard';
+        const TEAM_LEADERBOARD_COLLECTION = 'team-leaderboard';
 
-        // CSV fallback configuration
-        const SHEET_ID = '1ZFWdAeFsxmTqlLYkQmAjtNkyrBrjssniarHcaiUF2nU'; // Your sheet ID
-        const SHEET_GID = '509222110'; // Your sheet GID
-        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-
-        // Playbooks API endpoint
-
-        // Use the same deployed script as leaderboard (public, fetch works)
-        const PLAYBOOKS_API_URL = GOOGLE_SCRIPT_URL + '?action=getPlaybooks';
-        // CSV fallback function
-        function tryCSVFallback() {
-            const individuals = document.getElementById('individualLeaderboard');
-
-            fetch(CSV_URL)
-                .then(response => response.text())
-                .then(csvText => {
-                    const leaderboardData = parseCSVToLeaderboard(csvText);
-                    if (leaderboardData.length > 0) {
-                        displayLeaderboardData(leaderboardData);
-                    } else {
-                        displayEmptyLeaderboard();
-                    }
-                })
-                .catch(csvError => {
-                    tryManualDataFallback();
-                });
-        }
-
-        // Manual data fallback function
-        function tryManualDataFallback() {
-            const manualData = [];
-
-            // Parse and cache the data properly
-            const individualData = manualData.filter(item => item.id && item.fullName);
-            const teamData = manualData.filter(item => item.accumulatedPoints !== undefined && item.teamSize !== undefined);
-
-            cachedLeaderboardData.individual = individualData.sort((a, b) => b.points - a.points);
-            cachedLeaderboardData.team = teamData.sort((a, b) => (b.pointsPerEmployee || 0) - (a.pointsPerEmployee || 0));
-
-            displayLeaderboardData(individualData);
-        }
-
-        // Parse CSV data to leaderboard format
-        function parseCSVToLeaderboard(csvText) {
+        // Load leaderboard data directly from Firebase (NEW APPROACH - No CORS issues!)
+        async function loadLeaderboardData() {
             try {
-                const lines = csvText.trim().split('\n');
-                const data = [];
+                console.log('Loading leaderboard data from Firebase...');
 
-                // Skip header row (index 0)
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i];
-                    if (!line.trim()) continue;
-
-                    // Parse CSV line (handle commas in quoted strings)
-                    const columns = parseCSVLine(line);
-
-                    // Map individual data: No, ID, Full Name, Function, Sub-department, Account, Points
-                    if (columns.length >= 7 && columns[0] && columns[2] && columns[3] && !isNaN(parseInt(columns[6]))) {
-                        data.push({
-                            no: columns[0],
-                            id: columns[1],
-                            fullName: columns[2],
-                            function: columns[3],
-                            subDepartment: columns[4] || '',
-                            account: columns[5] || columns[2], // Use full name if no account
-                            points: parseInt(columns[6]) || 0,
-                            pointsPerTeamSize: parseFloat(columns[6]) || 0
-                        });
-                    }
-
-                    // Map team data: No, Function, Sub-department, Account, Accumulated Points, Team Size, Points per Employee
-                    if (columns.length >= 7 && columns[0] && columns[1] && !isNaN(parseInt(columns[4])) && !isNaN(parseInt(columns[5])) && !isNaN(parseFloat(columns[6]))) {
-                        // Additional check: valid team data has numeric accumulated points
-                        const accumulatedPoints = parseInt(columns[4]);
-                        if (accumulatedPoints >= 0) {
-                            data.push({
-                                no: columns[0],
-                                function: columns[1],
-                                subDepartment: columns[2] || '',
-                                account: columns[3] || '',
-                                accumulatedPoints: accumulatedPoints,
-                                teamSize: parseInt(columns[5]) || 0,
-                                pointsPerEmployee: parseFloat(columns[6]) || 0
-                            });
-                        }
-                    }
-                }
-
-                // Separate individual and team data
-                const individualData = [];
-                const teamData = [];
-
-                data.forEach(item => {
-                    if (item.id && item.fullName) {
-                        // Individual data
-                        individualData.push(item);
-                    } else if (item.accumulatedPoints !== undefined && item.teamSize !== undefined) {
-                        // Team data
-                        teamData.push(item);
-                    }
-                });
-
-                // Sort individual data by points descending
-                individualData.sort((a, b) => b.points - a.points);
-
-                // Sort team data by Accumulated Points per Employee descending
-                teamData.sort((a, b) => (b.pointsPerEmployee || 0) - (a.pointsPerEmployee || 0));
-
-                // Store both datasets in cache
-                cachedLeaderboardData.individual = individualData;
-                cachedLeaderboardData.team = teamData;
-
-                // Return individual data by default for backward compatibility
-                return individualData;
-
-            } catch (error) {
-                return [];
-            }
-        }
-
-        // Simple CSV line parser
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-
-            result.push(current.trim());
-            return result;
-        }
-
-        // Load leaderboard data from Google Apps Script
-        function loadLeaderboardData(retryCount = 0) {
-            const MAX_RETRIES = 3;
-
-            try {
                 // Show loading state
                 const individualBoard = document.getElementById('individualLeaderboard');
-
-                // Show loading state in podium
                 renderPodium({ first: null, second: null, third: null });
 
                 const loadingHtml = `
@@ -3504,134 +3360,111 @@
                         <div class="p-4">
                             <div class="text-center py-16 bg-gray-50/30">
                                 <i class="fas fa-spinner fa-spin text-4xl mb-4 text-[#27aae1]"></i>
-                                <div class="font-semibold text-gray-600">Loading leaderboard data...</div>
-                                ${retryCount > 0 ? `<div class="text-sm text-gray-500 mt-2">Retry attempt ${retryCount}/${MAX_RETRIES}</div>` : ''}
+                                <div class="font-semibold text-gray-600">Loading leaderboard data from Firebase...</div>
                             </div>
                         </div>
                     </div>
                 `;
                 individualBoard.innerHTML = loadingHtml;
 
+                // Load both individual and team data from Firebase
+                const [individualData, teamData] = await Promise.all([
+                    loadIndividualLeaderboardFromFirebase(),
+                    loadTeamLeaderboardFromFirebase()
+                ]);
+                console.log("teamData:", teamData)
 
-                const callbackName = 'leaderboardCallback_' + Date.now();
-                const script = document.createElement('script');
-                let callbackExecuted = false;
+                // Cache the data
+                cachedLeaderboardData.individual = individualData;
+                cachedLeaderboardData.team = teamData;
 
+                // Display appropriate data based on current tab
+                const teamBoard = document.getElementById('teamLeaderboard');
 
+                if (teamBoard.classList.contains('hidden')) {
+                    // Individual tab is active
+                    displayLeaderboardData(cachedLeaderboardData.individual, false);
+                } else {
+                    // Team tab is active
+                    displayLeaderboardData(cachedLeaderboardData.team, true);
+                }
 
-                // Create global callback function
-                window[callbackName] = function (result) {
-                    if (callbackExecuted) return;
-                    callbackExecuted = true;
-
-
-                    if (result.success) {
-                        // Cache both individual and team data
-                        cachedLeaderboardData.individual = result.individual || [];
-                        cachedLeaderboardData.team = result.team || [];
-
-                        // Display appropriate data based on current tab
-                        const teamBoard = document.getElementById('teamLeaderboard');
-                        const individualBoard = document.getElementById('individualLeaderboard');
-
-                        if (teamBoard.classList.contains('hidden')) {
-                            // Individual tab is active
-                            displayLeaderboardData(cachedLeaderboardData.individual, false);
-                        } else {
-                            // Team tab is active
-                            displayLeaderboardData(cachedLeaderboardData.team, true);
-                        }
-
-                        // Show success notification on retry
-                        if (retryCount > 0) {
-                            showNotification('success', 'Leaderboard loaded successfully!');
-                        }
-                    } else {
-                        if (retryCount < MAX_RETRIES) {
-                            console.log(`API returned error, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
-                            setTimeout(() => {
-                                loadLeaderboardData(retryCount + 1);
-                            }, 2000 * (retryCount + 1)); // Exponential backoff
-                        } else {
-                            tryCSVFallback();
-                        }
-                    }
-
-                    // Cleanup
-                    if (script.parentNode) {
-                        document.body.removeChild(script);
-                    }
-                    delete window[callbackName];
-                };
-
-                script.onerror = function () {
-                    if (callbackExecuted) return;
-                    callbackExecuted = true;
-
-                    console.error('Script load error, retry count:', retryCount);
-
-                    // Retry logic with exponential backoff
-                    if (retryCount < MAX_RETRIES) {
-                        console.log(`Retrying after error... (${retryCount + 1}/${MAX_RETRIES})`);
-                        setTimeout(() => {
-                            loadLeaderboardData(retryCount + 1);
-                        }, 2000 * (retryCount + 1)); // 2s, 4s, 6s
-                    } else {
-                        console.error('Max retries reached, falling back to CSV');
-                        showNotification('error', 'Failed to load leaderboard. Using backup data.');
-                        tryCSVFallback();
-                    }
-
-                    // Cleanup
-                    if (script.parentNode) {
-                        document.body.removeChild(script);
-                    }
-                    delete window[callbackName];
-                };
-
-                // Add cache-busting parameter to prevent caching issues
-                const cacheBuster = '&t=' + Date.now();
-                script.src = LEADERBOARD_API_URL + '&callback=' + callbackName + cacheBuster;
-                document.body.appendChild(script);
-
-                // Timeout fallback with retry
-                setTimeout(() => {
-                    if (!callbackExecuted) {
-                        callbackExecuted = true;
-                        console.error('Request timeout, retry count:', retryCount);
-
-                        if (retryCount < MAX_RETRIES) {
-                            console.log(`Retrying after timeout... (${retryCount + 1}/${MAX_RETRIES})`);
-                            setTimeout(() => {
-                                loadLeaderboardData(retryCount + 1);
-                            }, 2000 * (retryCount + 1));
-                        } else {
-                            console.error('Max retries reached after timeout, falling back to CSV');
-                            showNotification('error', 'Connection timeout. Using backup data.');
-                            tryCSVFallback();
-                        }
-
-                        if (script.parentNode) {
-                            document.body.removeChild(script);
-                        }
-                        delete window[callbackName];
-                    }
-                }, 10000); // 10 second timeout (increased from 5s)
+                console.log(`Loaded ${individualData.length} individual and ${teamData.length} team entries from Firebase`);
 
             } catch (error) {
-                console.error('Error loading leaderboard data:', error);
+                console.error('Error loading leaderboard data from Firebase:', error);
+                showNotification('error', 'Failed to load leaderboard data: ' + error.message);
+                displayEmptyLeaderboard();
+            }
+        }
 
-                // Retry on exception
-                if (retryCount < MAX_RETRIES) {
-                    console.log(`Retrying after exception... (${retryCount + 1}/${MAX_RETRIES})`);
-                    setTimeout(() => {
-                        loadLeaderboardData(retryCount + 1);
-                    }, 2000 * (retryCount + 1));
-                } else {
-                    console.error('Max retries reached after exception');
-                    showNotification('error', 'Failed to load leaderboard data.');
-                    displayEmptyLeaderboard();
-                }
+        // Load individual leaderboard from Firebase
+        async function loadIndividualLeaderboardFromFirebase() {
+            try {
+                const leaderboardRef = collection(db, INDIVIDUAL_LEADERBOARD_COLLECTION);
+                const q = query(leaderboardRef, orderBy('points', 'desc'));
+                const querySnapshot = await getDocs(q);
+
+                const leaderboardData = [];
+                let rank = 1;
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    leaderboardData.push({
+                        rank: rank++,
+                        no: data.no || '',
+                        id: data.id || '',
+                        fullName: data.fullName || 'Unknown',
+                        function: data.function || 'Unknown',
+                        subDepartment: data.subDepartment || '',
+                        account: data.account || '',
+                        points: data.points || 0,
+                        uniqueId: data.uniqueId || doc.id,
+                        lastUpdated: data.lastUpdated || ''
+                    });
+                });
+
+                console.log(`Loaded ${leaderboardData.length} individual entries from Firebase`);
+                return leaderboardData;
+
+            } catch (error) {
+                console.error('Error loading individual leaderboard from Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Load team leaderboard from Firebase
+        async function loadTeamLeaderboardFromFirebase() {
+            try {
+                const teamLeaderboardRef = collection(db, TEAM_LEADERBOARD_COLLECTION);
+                const q = query(teamLeaderboardRef, orderBy('pointsPerEmployee', 'desc'));
+                const querySnapshot = await getDocs(q);
+
+                const teamData = [];
+                let rank = 1;
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    teamData.push({
+                        rank: rank++,
+                        no: data.no || '',
+                        function: data.function || 'Unknown',
+                        subDepartment: data.subDepartment || '',
+                        account: data.account || '',
+                        accumulatedPoints: data.accumulatedPoints || 0,
+                        teamSize: data.teamSize || 1,
+                        pointsPerEmployee: data.pointsPerEmployee || 0,
+                        uniqueId: data.uniqueId || doc.id,
+                        lastUpdated: data.lastUpdated || ''
+                    });
+                });
+
+                console.log(`Loaded ${teamData.length} team entries from Firebase`);
+                return teamData;
+
+            } catch (error) {
+                console.error('Error loading team leaderboard from Firebase:', error);
+                throw error;
             }
         }
 
@@ -3866,7 +3699,7 @@
                         rowColorClass = 'bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200';
                         pointsColorClass = 'text-orange-600 font-bold';
                     }
-                    console.log("entry:", entry)
+
                     if (isTeamData) {
                         // Team leaderboard row
                         const highlightedAccount = highlightSearchTerms(entry.account || 'Unknown', currentSearchQuery.team);
@@ -3881,7 +3714,7 @@
                                 <div class="col-span-2 truncate pl-1">${highlightedAccount}</div>
                                 <div class="col-span-1 font-semibold ${pointsColorClass} text-center w-16">${entry.accumulatedPoints || 0}</div>
                                 <div class="col-span-1 font-medium text-center w-12">${entry.teamSize || 'N/A'}</div>
-                                <div class="col-span-3 font-semibold ${pointsColorClass} text-center">${entry.pointsPerTeamMember || 'N/A'}</div>
+                                <div class="col-span-3 font-semibold ${pointsColorClass} text-center">${entry.pointsPerEmployee || 'N/A'}</div>
                             </div>
                         `;
                     } else {

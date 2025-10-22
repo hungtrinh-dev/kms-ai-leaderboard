@@ -5,6 +5,10 @@
 const FIREBASE_PROJECT_ID = 'kms-ai-leaderboard';
 const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 const FIRESTORE_TABLE_PLAYBOOKS = 'playbooks';
+const FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD = 'individual-leaderboard';
+const FIRESTORE_COLLECTION_TEAM_LEADERBOARD = 'team-leaderboard';
+const LEADERBOARD_SHEET_NAME = 'Leaderboard by Individual'; // Change this to match your sheet name
+const TEAM_LEADERBOARD_SHEET_NAME = 'Leaderboard by Account/Department'; // Change this to match your team sheet name
 
 function doPost(e) {
   try {
@@ -362,96 +366,6 @@ function getLeaderboardData() {
     };
   }
 }
-
-// Function to get playbooks data from Form Responses sheet
-// COMMENTED OUT - Now using Firebase data instead
-/*
-function getPlaybooksData() {
-  try {
-    // Get the Form Responses sheet (you may need to adjust the sheet name)
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = spreadsheet.getSheetByName('Form Responses') || spreadsheet.getSheets()[0];
-    
-    if (!sheet) {
-      return {
-        success: false,
-        error: 'Form Responses sheet not found',
-        playbooks: []
-      };
-    }
-
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    
-    // Find column indices
-    const timestampIndex = headers.indexOf('Timestamp');
-    const emailIndex = headers.indexOf('Email Address');
-    const categoryIndex = headers.indexOf('Your Tip Category');
-    const descriptionIndex = headers.indexOf('Description of Your Tip');
-    const approvalIndex = headers.indexOf('Anh Chanh'); // Assuming first approval column
-    
-    if (timestampIndex === -1 || emailIndex === -1 || categoryIndex === -1 || descriptionIndex === -1 || approvalIndex === -1) {
-      return {
-        success: false,
-        error: 'Required columns not found in sheet',
-        playbooks: []
-      };
-    }
-
-    const playbooks = [];
-    
-    // Process each row (skip header)
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      const approval = row[approvalIndex];
-      
-      // Only include approved entries
-      if (approval && approval.toString().toLowerCase().includes('approved')) {
-        const timestamp = row[timestampIndex];
-        const email = row[emailIndex];
-        const category = row[categoryIndex];
-        const description = row[descriptionIndex];
-        
-        // Map category to our internal categories
-        let mappedCategory = 'productivity'; // default
-        if (category) {
-          const cat = category.toString().toLowerCase();
-          if (cat.includes('driving operational efficiency') || cat.includes('productivity')) {
-            mappedCategory = 'productivity';
-          } else if (cat.includes('predictive insights') || cat.includes('data') || cat.includes('analysis')) {
-            mappedCategory = 'data';
-          } else if (cat.includes('customer experience')) {
-            mappedCategory = 'cx';
-          } else if (cat.includes('innovation') || cat.includes('creativity')) {
-            mappedCategory = 'innovation';
-          }
-        }
-        
-        playbooks.push({
-          timestamp: timestamp ? timestamp.toString() : '',
-          owner: email ? email.toString() : '',
-          category: mappedCategory,
-          description: description ? description.toString() : ''
-        });
-      }
-    }
-
-    return {
-      success: true,
-      playbooks: playbooks,
-      count: playbooks.length
-    };
-    
-  } catch (error) {
-    console.error('Error getting playbooks data:', error);
-    return {
-      success: false,
-      error: error.toString(),
-      playbooks: []
-    };
-  }
-}
-*/
 
 // Handle GET requests for leaderboard data
 function doGet(e) {
@@ -903,5 +817,1194 @@ function syncDataSheetToFirebase() {
   });
 
   Logger.log('Sync completed.');
+}
+
+// =============================================================================
+// INDIVIDUAL LEADERBOARD SYNC TO FIREBASE
+// =============================================================================
+
+/**
+ * Sync a single leaderboard entry to Firebase
+ * @param {Object} entry - The leaderboard entry data
+ * @returns {Object} - Result object with success status
+ */
+function syncLeaderboardEntryToFirebase(entry) {
+  try {
+    if (!entry || !entry.account) {
+      Logger.log('Invalid entry: missing account');
+      return { success: false, error: 'Missing account' };
+    }
+
+    // Create UNIQUE document ID using multiple fields to avoid overwrites
+    // Format: {no}_{sanitized_email}_{sanitized_subdept}
+    // This ensures each row gets its own document even if same person appears multiple times
+    const sanitizedEmail = entry.account.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sanitizedSubDept = (entry.subDepartment || 'none').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const documentId = `${entry.no}_${sanitizedEmail}_${sanitizedSubDept}`;
+
+    Logger.log(`Creating/updating document with ID: ${documentId}`);
+
+    const url = `${FIRESTORE_BASE_URL}/${FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD}/${documentId}`;
+
+    // Prepare Firestore document structure
+    const firestoreData = {
+      fields: {
+        no: { integerValue: entry.no.toString() },
+        id: { stringValue: entry.id.toString() },
+        fullName: { stringValue: entry.fullName },
+        function: { stringValue: entry.function },
+        subDepartment: { stringValue: entry.subDepartment || '' },
+        account: { stringValue: entry.account },
+        points: { integerValue: entry.points.toString() },
+        rank: { integerValue: entry.rank.toString() },
+        uniqueId: { stringValue: documentId }, // Store the unique ID in the document
+        lastUpdated: { timestampValue: new Date().toISOString() }
+      }
+    };
+
+    const options = {
+      method: 'patch',
+      contentType: 'application/json',
+      payload: JSON.stringify(firestoreData),
+      muteHttpExceptions: true
+    };
+
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+
+    if (responseCode === 200) {
+      Logger.log(`Successfully synced entry: ${documentId} (${entry.fullName} - ${entry.subDepartment})`);
+      return { success: true, documentId: documentId };
+    } else {
+      Logger.log(`Error syncing entry: ${response.getContentText()}`);
+      return { success: false, error: response.getContentText() };
+    }
+
+  } catch (error) {
+    Logger.log(`Exception syncing entry to Firebase: ${error.toString()}`);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Sync all individual leaderboard data from sheet to Firebase
+ * This function reads the entire leaderboard sheet and syncs to Firebase
+ */
+function syncAllLeaderboardToFirebase() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Get the leaderboard sheet
+    const sheet = spreadsheet.getSheetByName(LEADERBOARD_SHEET_NAME) ||
+      spreadsheet.getSheetByName('AI for Everyone') ||
+      spreadsheet.getSheetByName('Leaderboard') ||
+      spreadsheet.getActiveSheet();
+
+    Logger.log(`Syncing from sheet: ${sheet.getName()}`);
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      Logger.log('No data to sync (only header or empty sheet)');
+      return { success: true, message: 'No data to sync', synced: 0 };
+    }
+
+    // Get all data (columns A-G: No, ID, Full Name, Function, Sub-department, Account, Points)
+    const range = sheet.getRange(2, 1, lastRow - 1, 7); // Skip header row
+    const data = range.getValues();
+
+    Logger.log(`Found ${data.length} rows to process`);
+
+    let syncedCount = 0;
+    let errorCount = 0;
+    const errors = [];
+
+    // Process each row
+    data.forEach((row, index) => {
+      // Skip empty rows
+      if (!row[0] || !row[2] || !row[5]) {
+        Logger.log(`Skipping row ${index + 2}: missing required data`);
+        return;
+      }
+
+      const entry = {
+        no: row[0],
+        id: row[1] || '',
+        fullName: row[2],
+        function: row[3] || 'Unknown',
+        subDepartment: row[4] || '',
+        account: row[5],
+        points: parseInt(row[6]) || 0,
+        rank: index + 1 // Will be recalculated based on points
+      };
+
+      const result = syncLeaderboardEntryToFirebase(entry);
+
+      if (result.success) {
+        syncedCount++;
+      } else {
+        errorCount++;
+        errors.push({ row: index + 2, account: entry.account, error: result.error });
+      }
+
+      // Add a small delay to avoid rate limiting
+      if ((index + 1) % 10 === 0) {
+        Utilities.sleep(500); // Sleep for 500ms every 10 requests
+      }
+    });
+
+    Logger.log(`Sync completed: ${syncedCount} succeeded, ${errorCount} failed`);
+
+    if (errors.length > 0) {
+      Logger.log('Errors:', JSON.stringify(errors));
+    }
+
+    return {
+      success: true,
+      synced: syncedCount,
+      errors: errorCount,
+      errorDetails: errors
+    };
+
+  } catch (error) {
+    Logger.log(`Exception in syncAllLeaderboardToFirebase: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * Watch for changes in the leaderboard sheet and sync to Firebase
+ * This function is triggered automatically when the sheet is edited
+ */
+function onEditLeaderboardSync(e) {
+  try {
+    // Check if the edit happened in the leaderboard sheet
+    const sheet = e.source.getActiveSheet();
+    const sheetName = sheet.getName();
+
+    if (sheetName !== LEADERBOARD_SHEET_NAME &&
+      sheetName !== 'AI for Everyone' &&
+      sheetName !== 'Leaderboard') {
+      return; // Not the leaderboard sheet, ignore
+    }
+
+    const editedRow = e.range.getRow();
+    const editedCol = e.range.getColumn();
+
+    // Only process if editing data rows (not header) and relevant columns (A-G)
+    if (editedRow <= 1 || editedCol > 7) {
+      return;
+    }
+
+    Logger.log(`Detected edit in ${sheetName} at row ${editedRow}, column ${editedCol}`);
+
+    // Get the edited row data
+    const rowData = sheet.getRange(editedRow, 1, 1, 7).getValues()[0];
+
+    // Validate required fields
+    if (!rowData[0] || !rowData[2] || !rowData[5]) {
+      Logger.log(`Row ${editedRow}: Missing required data, skipping sync`);
+      return;
+    }
+
+    // Prepare entry object
+    const entry = {
+      no: rowData[0],
+      id: rowData[1] || '',
+      fullName: rowData[2],
+      function: rowData[3] || 'Unknown',
+      subDepartment: rowData[4] || '',
+      account: rowData[5],
+      points: parseInt(rowData[6]) || 0,
+      rank: editedRow - 1 // Approximate rank based on row position
+    };
+
+    // Sync to Firebase
+    const result = syncLeaderboardEntryToFirebase(entry);
+
+    if (result.success) {
+      Logger.log(`Successfully auto-synced row ${editedRow} to Firebase`);
+    } else {
+      Logger.log(`Failed to auto-sync row ${editedRow}: ${result.error}`);
+    }
+
+  } catch (error) {
+    Logger.log(`Exception in onEditLeaderboardSync: ${error.toString()}`);
+  }
+}
+
+/**
+ * Generate unique document ID for leaderboard entry
+ * @param {Object} entry - The leaderboard entry data
+ * @returns {string} - Unique document ID
+ */
+function generateLeaderboardDocumentId(entry) {
+  const sanitizedEmail = entry.account.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const sanitizedSubDept = (entry.subDepartment || 'none').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return `${entry.no}_${sanitizedEmail}_${sanitizedSubDept}`;
+}
+
+/**
+ * Delete a leaderboard entry from Firebase by unique ID
+ * @param {string} documentId - The unique document ID to delete
+ */
+function deleteLeaderboardEntryFromFirebase(documentId) {
+  try {
+    if (!documentId) {
+      return { success: false, error: 'Missing document ID' };
+    }
+
+    const url = `${FIRESTORE_BASE_URL}/${FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD}/${documentId}`;
+
+    const options = {
+      method: 'delete',
+      muteHttpExceptions: true
+    };
+
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+
+    if (responseCode === 200 || responseCode === 204) {
+      Logger.log(`Successfully deleted entry: ${documentId}`);
+      return { success: true };
+    } else {
+      Logger.log(`Error deleting entry: ${response.getContentText()}`);
+      return { success: false, error: response.getContentText() };
+    }
+
+  } catch (error) {
+    Logger.log(`Exception deleting entry from Firebase: ${error.toString()}`);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Delete all entries for a specific account (useful for cleanup)
+ * @param {string} account - The account email to delete all entries for
+ */
+function deleteAllEntriesForAccount(account) {
+  try {
+    if (!account) {
+      return { success: false, error: 'Missing account' };
+    }
+
+    // Query all documents for this account
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const sanitizedEmail = account.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: 'account' },
+            op: 'EQUAL',
+            value: { stringValue: account }
+          }
+        }
+      }
+    };
+
+    const queryOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const results = JSON.parse(queryResponse.getContentText());
+
+    if (!results || results.length === 0) {
+      Logger.log(`No entries found for account: ${account}`);
+      return { success: true, deleted: 0 };
+    }
+
+    let deletedCount = 0;
+
+    // Delete each document
+    results.forEach((item) => {
+      if (item.document && item.document.name) {
+        const documentName = item.document.name;
+        const deleteUrl = `https://firestore.googleapis.com/v1/${documentName}`;
+
+        const deleteOptions = {
+          method: 'delete',
+          muteHttpExceptions: true
+        };
+
+        const deleteResponse = UrlFetchApp.fetch(deleteUrl, deleteOptions);
+        if (deleteResponse.getResponseCode() === 200) {
+          deletedCount++;
+        }
+      }
+    });
+
+    Logger.log(`Deleted ${deletedCount} entries for account: ${account}`);
+    return { success: true, deleted: deletedCount };
+
+  } catch (error) {
+    Logger.log(`Exception deleting entries for account: ${error.toString()}`);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Clear all entries from Firebase individual-leaderboard collection
+ * WARNING: This will delete all leaderboard data from Firebase!
+ */
+function clearFirebaseLeaderboard() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Clear Firebase Leaderboard',
+    'Are you sure you want to delete ALL leaderboard entries from Firebase? This cannot be undone!',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    Logger.log('Clear operation cancelled by user');
+    return;
+  }
+
+  try {
+    // Query all documents in the collection
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD }]
+      }
+    };
+
+    const queryOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const results = JSON.parse(queryResponse.getContentText());
+
+    if (!results || results.length === 0) {
+      Logger.log('No documents found to delete');
+      return { success: true, deleted: 0 };
+    }
+
+    let deletedCount = 0;
+
+    // Delete each document
+    results.forEach((item) => {
+      if (item.document && item.document.name) {
+        const documentName = item.document.name;
+        const deleteUrl = `https://firestore.googleapis.com/v1/${documentName}`;
+
+        const deleteOptions = {
+          method: 'delete',
+          muteHttpExceptions: true
+        };
+
+        const deleteResponse = UrlFetchApp.fetch(deleteUrl, deleteOptions);
+        if (deleteResponse.getResponseCode() === 200) {
+          deletedCount++;
+        }
+      }
+    });
+
+    Logger.log(`Cleared ${deletedCount} entries from Firebase`);
+    ui.alert('Success', `Deleted ${deletedCount} entries from Firebase leaderboard`, ui.ButtonSet.OK);
+
+    return { success: true, deleted: deletedCount };
+
+  } catch (error) {
+    Logger.log(`Exception clearing Firebase: ${error.toString()}`);
+    ui.alert('Error', `Failed to clear Firebase: ${error.message}`, ui.ButtonSet.OK);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Manual trigger to sync all leaderboard data
+ * Add this to a custom menu for easy access
+ */
+function manualSyncLeaderboard() {
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    'Sync Leaderboard to Firebase',
+    'This will sync all leaderboard data from the sheet to Firebase. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  ui.alert('Syncing...', 'Please wait while data is being synced to Firebase.', ui.ButtonSet.OK);
+
+  const result = syncAllLeaderboardToFirebase();
+
+  if (result.success) {
+    ui.alert(
+      'Sync Complete',
+      `Successfully synced ${result.synced} entries to Firebase.\nErrors: ${result.errors || 0}`,
+      ui.ButtonSet.OK
+    );
+  } else {
+    ui.alert('Sync Failed', `Error: ${result.error}`, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Clean up old/duplicate entries and resync with new unique IDs
+ * This is useful if you had entries with old ID format (just email)
+ */
+function cleanupAndResyncLeaderboard() {
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    'Cleanup and Resync',
+    'This will:\n1. Clear ALL existing leaderboard entries from Firebase\n2. Resync all data from sheet with NEW unique IDs\n\nThis ensures no duplicates. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  try {
+    // Step 1: Clear all existing entries
+    ui.alert('Step 1/2', 'Clearing old entries from Firebase...', ui.ButtonSet.OK);
+
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD }]
+      }
+    };
+
+    const queryOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const results = JSON.parse(queryResponse.getContentText());
+
+    let deletedCount = 0;
+    if (results && results.length > 0) {
+      results.forEach((item) => {
+        if (item.document && item.document.name) {
+          const documentName = item.document.name;
+          const deleteUrl = `https://firestore.googleapis.com/v1/${documentName}`;
+
+          const deleteOptions = {
+            method: 'delete',
+            muteHttpExceptions: true
+          };
+
+          const deleteResponse = UrlFetchApp.fetch(deleteUrl, deleteOptions);
+          if (deleteResponse.getResponseCode() === 200) {
+            deletedCount++;
+          }
+        }
+      });
+    }
+
+    Logger.log(`Deleted ${deletedCount} old entries`);
+
+    // Step 2: Resync all data with new unique IDs
+    ui.alert('Step 2/2', 'Syncing all data with new unique IDs...', ui.ButtonSet.OK);
+
+    const syncResult = syncAllLeaderboardToFirebase();
+
+    if (syncResult.success) {
+      ui.alert(
+        'Cleanup Complete! ✅',
+        `Successfully cleaned up and resynced!\n\n` +
+        `• Deleted: ${deletedCount} old entries\n` +
+        `• Synced: ${syncResult.synced} entries with unique IDs\n` +
+        `• Errors: ${syncResult.errors || 0}\n\n` +
+        `All ${syncResult.synced} records should now be in Firebase!`,
+        ui.ButtonSet.OK
+      );
+    } else {
+      ui.alert('Error', `Cleanup succeeded but resync failed: ${syncResult.error}`, ui.ButtonSet.OK);
+    }
+
+  } catch (error) {
+    Logger.log(`Exception in cleanupAndResyncLeaderboard: ${error.toString()}`);
+    ui.alert('Error', `Cleanup failed: ${error.message}`, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * View sync statistics
+ */
+function viewSyncStatistics() {
+  const ui = SpreadsheetApp.getUi();
+
+  try {
+    // Count sheet rows
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = spreadsheet.getSheetByName(LEADERBOARD_SHEET_NAME) ||
+      spreadsheet.getSheetByName('AI for Everyone') ||
+      spreadsheet.getSheetByName('Leaderboard') ||
+      spreadsheet.getActiveSheet();
+
+    const lastRow = sheet.getLastRow();
+    const sheetCount = Math.max(0, lastRow - 1); // Exclude header
+
+    // Count Firebase documents
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD }]
+      }
+    };
+
+    const queryOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const results = JSON.parse(queryResponse.getContentText());
+    const firebaseCount = results ? results.length : 0;
+
+    const status = sheetCount === firebaseCount ? '✅ In Sync' : '⚠️ Out of Sync';
+
+    ui.alert(
+      'Sync Statistics',
+      `${status}\n\n` +
+      `📊 Google Sheet: ${sheetCount} records\n` +
+      `🔥 Firebase: ${firebaseCount} documents\n\n` +
+      `${sheetCount !== firebaseCount ? 'Recommendation: Run "Cleanup and Resync" to fix discrepancy.' : 'Everything looks good!'}`,
+      ui.ButtonSet.OK
+    );
+
+  } catch (error) {
+    ui.alert('Error', `Failed to get statistics: ${error.message}`, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Add custom menu to Google Sheets UI
+ * This runs automatically when the spreadsheet opens
+ */
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('🔥 Firebase Sync')
+    .addSubMenu(ui.createMenu('👤 Individual Leaderboard')
+      .addItem('📊 Sync Individual to Firebase', 'manualSyncLeaderboard')
+      .addItem('🧹 Cleanup and Resync Individual', 'cleanupAndResyncLeaderboard')
+      .addItem('📈 View Individual Statistics', 'viewSyncStatistics')
+      .addItem('🗑️ Clear Individual Data', 'clearFirebaseLeaderboard'))
+    .addSubMenu(ui.createMenu('👥 Team Leaderboard')
+      .addItem('📊 Sync Team to Firebase', 'manualSyncTeamLeaderboard')
+      .addItem('🧹 Cleanup and Resync Team', 'cleanupAndResyncTeamLeaderboard')
+      .addItem('📈 View Team Statistics', 'viewTeamSyncStatistics')
+      .addItem('🗑️ Clear Team Data', 'clearFirebaseTeamLeaderboard'))
+    .addSeparator()
+    .addItem('🔄 Sync Playbooks to Firebase', 'syncDataSheetToFirebase')
+    .addToUi();
+}
+
+/**
+ * Install the onEdit trigger for automatic syncing
+ * Run this once to set up automatic syncing
+ */
+function installLeaderboardSyncTrigger() {
+  // Delete existing triggers to avoid duplicates
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'onEditLeaderboardSync') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  // Create new trigger
+  ScriptApp.newTrigger('onEditLeaderboardSync')
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onEdit()
+    .create();
+
+  Logger.log('Leaderboard sync trigger installed successfully');
+  SpreadsheetApp.getUi().alert('Success', 'Automatic sync trigger installed! The leaderboard will now sync to Firebase whenever you edit it.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+/**
+ * Uninstall the onEdit trigger
+ */
+function uninstallLeaderboardSyncTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'onEditLeaderboardSync') {
+      ScriptApp.deleteTrigger(trigger);
+      removed++;
+    }
+  });
+
+  Logger.log(`Removed ${removed} leaderboard sync triggers`);
+  SpreadsheetApp.getUi().alert('Success', `Removed ${removed} automatic sync trigger(s).`, SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+// =============================================================================
+// TEAM LEADERBOARD SYNC TO FIREBASE
+// =============================================================================
+
+/**
+ * Sync a single team leaderboard entry to Firebase
+ * @param {Object} entry - The team leaderboard entry data
+ * @returns {Object} - Result object with success status
+ */
+function syncTeamLeaderboardEntryToFirebase(entry) {
+  try {
+    if (!entry || !entry.function) {
+      Logger.log('Invalid team entry: missing function');
+      return { success: false, error: 'Missing function' };
+    }
+
+    // Create UNIQUE document ID for team entries
+    // Format: {no}_{sanitized_function}_{sanitized_subdept}
+    const sanitizedFunction = entry.function.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sanitizedSubDept = (entry.subDepartment || 'none').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const documentId = `${entry.no}_${sanitizedFunction}_${sanitizedSubDept}`;
+
+    Logger.log(`Creating/updating team document with ID: ${documentId}`);
+
+    const url = `${FIRESTORE_BASE_URL}/${FIRESTORE_COLLECTION_TEAM_LEADERBOARD}/${documentId}`;
+
+    // Prepare Firestore document structure for team data
+    const firestoreData = {
+      fields: {
+        no: { integerValue: entry.no.toString() },
+        function: { stringValue: entry.function },
+        subDepartment: { stringValue: entry.subDepartment || '' },
+        account: { stringValue: entry.account || '' },
+        accumulatedPoints: { integerValue: entry.accumulatedPoints.toString() },
+        teamSize: { integerValue: entry.teamSize.toString() },
+        pointsPerEmployee: { doubleValue: entry.pointsPerEmployee },
+        rank: { integerValue: entry.rank.toString() },
+        uniqueId: { stringValue: documentId },
+        lastUpdated: { timestampValue: new Date().toISOString() }
+      }
+    };
+
+    const options = {
+      method: 'patch',
+      contentType: 'application/json',
+      payload: JSON.stringify(firestoreData),
+      muteHttpExceptions: true
+    };
+
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+
+    if (responseCode === 200) {
+      Logger.log(`Successfully synced team entry: ${documentId} (${entry.function} - ${entry.subDepartment})`);
+      return { success: true, documentId: documentId };
+    } else {
+      Logger.log(`Error syncing team entry: ${response.getContentText()}`);
+      return { success: false, error: response.getContentText() };
+    }
+
+  } catch (error) {
+    Logger.log(`Exception syncing team entry to Firebase: ${error.toString()}`);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Sync all team leaderboard data from sheet to Firebase
+ * Reads team leaderboard sheet and syncs to Firebase
+ */
+function syncAllTeamLeaderboardToFirebase() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Get the team leaderboard sheet
+    const sheet = spreadsheet.getSheetByName(TEAM_LEADERBOARD_SHEET_NAME) ||
+      spreadsheet.getSheetByName('Leaderboard by Account/Department') ||
+      spreadsheet.getSheetByName('Team Leaderboard');
+
+    if (!sheet) {
+      Logger.log('Team leaderboard sheet not found');
+      return {
+        success: false,
+        error: 'Team leaderboard sheet not found. Please update TEAM_LEADERBOARD_SHEET_NAME constant.',
+        synced: 0
+      };
+    }
+
+    Logger.log(`Syncing team data from sheet: ${sheet.getName()}`);
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      Logger.log('No team data to sync (only header or empty sheet)');
+      return { success: true, message: 'No data to sync', synced: 0 };
+    }
+
+    // Get all data (columns A-G: No, Function, Sub-dept, Account, Accumulated Points, Team Size, Points per Employee)
+    const range = sheet.getRange(2, 1, lastRow - 1, 7); // Skip header row
+    const data = range.getValues();
+
+    Logger.log(`Found ${data.length} team rows to process`);
+
+    let syncedCount = 0;
+    let errorCount = 0;
+    const errors = [];
+
+    // Process each row
+    data.forEach((row, index) => {
+      // Skip empty rows - must have No and Function
+      if (!row[0] || !row[1]) {
+        Logger.log(`Skipping team row ${index + 2}: missing required data`);
+        return;
+      }
+
+      // Calculate points per employee if not provided
+      const teamSize = parseInt(row[5]) || 1;
+      const accumulatedPoints = parseInt(row[4]) || 0;
+      const pointsPerEmployee = row[6] ? parseFloat(row[6]) : (accumulatedPoints / teamSize);
+
+      const entry = {
+        no: row[0],
+        function: row[1],
+        subDepartment: row[2] || '',
+        account: row[3] || '',
+        accumulatedPoints: accumulatedPoints,
+        teamSize: teamSize,
+        pointsPerEmployee: pointsPerEmployee,
+        rank: index + 1 // Will be recalculated based on points
+      };
+
+      const result = syncTeamLeaderboardEntryToFirebase(entry);
+
+      if (result.success) {
+        syncedCount++;
+      } else {
+        errorCount++;
+        errors.push({ row: index + 2, function: entry.function, error: result.error });
+      }
+
+      // Add a small delay to avoid rate limiting
+      if ((index + 1) % 10 === 0) {
+        Utilities.sleep(500);
+      }
+    });
+
+    Logger.log(`Team sync completed: ${syncedCount} succeeded, ${errorCount} failed`);
+
+    if (errors.length > 0) {
+      Logger.log('Team sync errors:', JSON.stringify(errors));
+    }
+
+    return {
+      success: true,
+      synced: syncedCount,
+      errors: errorCount,
+      errorDetails: errors
+    };
+
+  } catch (error) {
+    Logger.log(`Exception in syncAllTeamLeaderboardToFirebase: ${error.toString()}`);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * Watch for changes in the team leaderboard sheet and sync to Firebase
+ * This function is triggered automatically when the sheet is edited
+ */
+function onEditTeamLeaderboardSync(e) {
+  try {
+    // Check if the edit happened in the team leaderboard sheet
+    const sheet = e.source.getActiveSheet();
+    const sheetName = sheet.getName();
+
+    if (sheetName !== TEAM_LEADERBOARD_SHEET_NAME &&
+      sheetName !== 'Leaderboard by Account/Department' &&
+      sheetName !== 'Team Leaderboard') {
+      return; // Not the team leaderboard sheet, ignore
+    }
+
+    const editedRow = e.range.getRow();
+    const editedCol = e.range.getColumn();
+
+    // Only process if editing data rows (not header) and relevant columns (A-G)
+    if (editedRow <= 1 || editedCol > 7) {
+      return;
+    }
+
+    Logger.log(`Detected edit in team sheet ${sheetName} at row ${editedRow}, column ${editedCol}`);
+
+    // Get the edited row data
+    const rowData = sheet.getRange(editedRow, 1, 1, 7).getValues()[0];
+
+    // Validate required fields
+    if (!rowData[0] || !rowData[1]) {
+      Logger.log(`Team row ${editedRow}: Missing required data, skipping sync`);
+      return;
+    }
+
+    // Calculate points per employee
+    const teamSize = parseInt(rowData[5]) || 1;
+    const accumulatedPoints = parseInt(rowData[4]) || 0;
+    const pointsPerEmployee = rowData[6] ? parseFloat(rowData[6]) : (accumulatedPoints / teamSize);
+
+    // Prepare entry object
+    const entry = {
+      no: rowData[0],
+      function: rowData[1],
+      subDepartment: rowData[2] || '',
+      account: rowData[3] || '',
+      accumulatedPoints: accumulatedPoints,
+      teamSize: teamSize,
+      pointsPerEmployee: pointsPerEmployee,
+      rank: editedRow - 1
+    };
+
+    // Sync to Firebase
+    const result = syncTeamLeaderboardEntryToFirebase(entry);
+
+    if (result.success) {
+      Logger.log(`Successfully auto-synced team row ${editedRow} to Firebase`);
+    } else {
+      Logger.log(`Failed to auto-sync team row ${editedRow}: ${result.error}`);
+    }
+
+  } catch (error) {
+    Logger.log(`Exception in onEditTeamLeaderboardSync: ${error.toString()}`);
+  }
+}
+
+/**
+ * Delete a team leaderboard entry from Firebase by unique ID
+ * @param {string} documentId - The unique document ID to delete
+ */
+function deleteTeamLeaderboardEntryFromFirebase(documentId) {
+  try {
+    if (!documentId) {
+      return { success: false, error: 'Missing document ID' };
+    }
+
+    const url = `${FIRESTORE_BASE_URL}/${FIRESTORE_COLLECTION_TEAM_LEADERBOARD}/${documentId}`;
+
+    const options = {
+      method: 'delete',
+      muteHttpExceptions: true
+    };
+
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+
+    if (responseCode === 200 || responseCode === 204) {
+      Logger.log(`Successfully deleted team entry: ${documentId}`);
+      return { success: true };
+    } else {
+      Logger.log(`Error deleting team entry: ${response.getContentText()}`);
+      return { success: false, error: response.getContentText() };
+    }
+
+  } catch (error) {
+    Logger.log(`Exception deleting team entry from Firebase: ${error.toString()}`);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Clear all entries from Firebase team-leaderboard collection
+ * WARNING: This will delete all team leaderboard data from Firebase!
+ */
+function clearFirebaseTeamLeaderboard() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Clear Firebase Team Leaderboard',
+    'Are you sure you want to delete ALL team leaderboard entries from Firebase? This cannot be undone!',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    Logger.log('Clear team operation cancelled by user');
+    return;
+  }
+
+  try {
+    // Query all documents in the team collection
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: FIRESTORE_COLLECTION_TEAM_LEADERBOARD }]
+      }
+    };
+
+    const queryOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const results = JSON.parse(queryResponse.getContentText());
+
+    if (!results || results.length === 0) {
+      Logger.log('No team documents found to delete');
+      return { success: true, deleted: 0 };
+    }
+
+    let deletedCount = 0;
+
+    // Delete each document
+    results.forEach((item) => {
+      if (item.document && item.document.name) {
+        const documentName = item.document.name;
+        const deleteUrl = `https://firestore.googleapis.com/v1/${documentName}`;
+
+        const deleteOptions = {
+          method: 'delete',
+          muteHttpExceptions: true
+        };
+
+        const deleteResponse = UrlFetchApp.fetch(deleteUrl, deleteOptions);
+        if (deleteResponse.getResponseCode() === 200) {
+          deletedCount++;
+        }
+      }
+    });
+
+    Logger.log(`Cleared ${deletedCount} team entries from Firebase`);
+    ui.alert('Success', `Deleted ${deletedCount} entries from Firebase team leaderboard`, ui.ButtonSet.OK);
+
+    return { success: true, deleted: deletedCount };
+
+  } catch (error) {
+    Logger.log(`Exception clearing Firebase team leaderboard: ${error.toString()}`);
+    ui.alert('Error', `Failed to clear Firebase: ${error.message}`, ui.ButtonSet.OK);
+    return { success: false, error: error.toString() };
+  }
+}
+
+/**
+ * Manual trigger to sync all team leaderboard data
+ */
+function manualSyncTeamLeaderboard() {
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    'Sync Team Leaderboard to Firebase',
+    'This will sync all team leaderboard data from the sheet to Firebase. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  ui.alert('Syncing...', 'Please wait while team data is being synced to Firebase.', ui.ButtonSet.OK);
+
+  const result = syncAllTeamLeaderboardToFirebase();
+
+  if (result.success) {
+    ui.alert(
+      'Team Sync Complete',
+      `Successfully synced ${result.synced} team entries to Firebase.\nErrors: ${result.errors || 0}`,
+      ui.ButtonSet.OK
+    );
+  } else {
+    ui.alert('Team Sync Failed', `Error: ${result.error}`, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Clean up and resync team leaderboard with new unique IDs
+ */
+function cleanupAndResyncTeamLeaderboard() {
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    'Cleanup and Resync Team Leaderboard',
+    'This will:\n1. Clear ALL existing team leaderboard entries from Firebase\n2. Resync all team data from sheet with unique IDs\n\nContinue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  try {
+    // Step 1: Clear all existing team entries
+    ui.alert('Step 1/2', 'Clearing old team entries from Firebase...', ui.ButtonSet.OK);
+
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: FIRESTORE_COLLECTION_TEAM_LEADERBOARD }]
+      }
+    };
+
+    const queryOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const results = JSON.parse(queryResponse.getContentText());
+
+    let deletedCount = 0;
+    if (results && results.length > 0) {
+      results.forEach((item) => {
+        if (item.document && item.document.name) {
+          const documentName = item.document.name;
+          const deleteUrl = `https://firestore.googleapis.com/v1/${documentName}`;
+
+          const deleteOptions = {
+            method: 'delete',
+            muteHttpExceptions: true
+          };
+
+          const deleteResponse = UrlFetchApp.fetch(deleteUrl, deleteOptions);
+          if (deleteResponse.getResponseCode() === 200) {
+            deletedCount++;
+          }
+        }
+      });
+    }
+
+    Logger.log(`Deleted ${deletedCount} old team entries`);
+
+    // Step 2: Resync all team data
+    ui.alert('Step 2/2', 'Syncing all team data with new unique IDs...', ui.ButtonSet.OK);
+
+    const syncResult = syncAllTeamLeaderboardToFirebase();
+
+    if (syncResult.success) {
+      ui.alert(
+        'Team Cleanup Complete! ✅',
+        `Successfully cleaned up and resynced team data!\n\n` +
+        `• Deleted: ${deletedCount} old entries\n` +
+        `• Synced: ${syncResult.synced} team entries\n` +
+        `• Errors: ${syncResult.errors || 0}\n\n` +
+        `All ${syncResult.synced} team records should now be in Firebase!`,
+        ui.ButtonSet.OK
+      );
+    } else {
+      ui.alert('Error', `Cleanup succeeded but resync failed: ${syncResult.error}`, ui.ButtonSet.OK);
+    }
+
+  } catch (error) {
+    Logger.log(`Exception in cleanupAndResyncTeamLeaderboard: ${error.toString()}`);
+    ui.alert('Error', `Cleanup failed: ${error.message}`, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * View team sync statistics
+ */
+function viewTeamSyncStatistics() {
+  const ui = SpreadsheetApp.getUi();
+
+  try {
+    // Count sheet rows
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = spreadsheet.getSheetByName(TEAM_LEADERBOARD_SHEET_NAME) ||
+      spreadsheet.getSheetByName('Leaderboard by Account/Department') ||
+      spreadsheet.getSheetByName('Team Leaderboard');
+
+    if (!sheet) {
+      ui.alert('Error', 'Team leaderboard sheet not found. Please update TEAM_LEADERBOARD_SHEET_NAME constant.', ui.ButtonSet.OK);
+      return;
+    }
+
+    const lastRow = sheet.getLastRow();
+    const sheetCount = Math.max(0, lastRow - 1); // Exclude header
+
+    // Count Firebase documents
+    const queryUrl = `${FIRESTORE_BASE_URL}:runQuery`;
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: FIRESTORE_COLLECTION_TEAM_LEADERBOARD }]
+      }
+    };
+
+    const queryOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(queryPayload),
+      muteHttpExceptions: true
+    };
+
+    const queryResponse = UrlFetchApp.fetch(queryUrl, queryOptions);
+    const results = JSON.parse(queryResponse.getContentText());
+    const firebaseCount = results ? results.length : 0;
+
+    const status = sheetCount === firebaseCount ? '✅ In Sync' : '⚠️ Out of Sync';
+
+    ui.alert(
+      'Team Sync Statistics',
+      `${status}\n\n` +
+      `📊 Google Sheet: ${sheetCount} team records\n` +
+      `🔥 Firebase: ${firebaseCount} team documents\n\n` +
+      `${sheetCount !== firebaseCount ? 'Recommendation: Run "Cleanup and Resync Team" to fix discrepancy.' : 'Everything looks good!'}`,
+      ui.ButtonSet.OK
+    );
+
+  } catch (error) {
+    ui.alert('Error', `Failed to get team statistics: ${error.message}`, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Install the onEdit trigger for automatic team leaderboard syncing
+ * Run this once to set up automatic syncing for team data
+ */
+function installTeamLeaderboardSyncTrigger() {
+  // Delete existing triggers to avoid duplicates
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'onEditTeamLeaderboardSync') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  // Create new trigger
+  ScriptApp.newTrigger('onEditTeamLeaderboardSync')
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onEdit()
+    .create();
+
+  Logger.log('Team leaderboard sync trigger installed successfully');
+  SpreadsheetApp.getUi().alert('Success', 'Automatic team sync trigger installed! The team leaderboard will now sync to Firebase whenever you edit it.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+/**
+ * Uninstall the team onEdit trigger
+ */
+function uninstallTeamLeaderboardSyncTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'onEditTeamLeaderboardSync') {
+      ScriptApp.deleteTrigger(trigger);
+      removed++;
+    }
+  });
+
+  Logger.log(`Removed ${removed} team leaderboard sync triggers`);
+  SpreadsheetApp.getUi().alert('Success', `Removed ${removed} automatic team sync trigger(s).`, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 

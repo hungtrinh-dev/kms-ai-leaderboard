@@ -50,6 +50,34 @@ service cloud.firestore {
       // Disallow updates (reactions are immutable - only create/delete)
       allow update: if false;
     }
+    
+    // Individual Leaderboard collection rules
+    match /individual-leaderboard/{userId} {
+      // Allow everyone to read leaderboard data
+      allow read: if true;
+      
+      // Allow Google Apps Script to write (synced from Google Sheets)
+      // In production, you may want to restrict this to service account only
+      allow write: if true;
+      
+      // Alternative: Restrict write to KMS domain emails (more secure)
+      // allow write: if request.auth != null 
+      //              && request.auth.token.email.matches('.*@kms-technology.com$');
+    }
+    
+    // Team Leaderboard collection rules
+    match /team-leaderboard/{teamId} {
+      // Allow everyone to read team leaderboard data
+      allow read: if true;
+      
+      // Allow Google Apps Script to write (synced from Google Sheets)
+      // In production, you may want to restrict this to service account only
+      allow write: if true;
+      
+      // Alternative: Restrict write to KMS domain emails (more secure)
+      // allow write: if request.auth != null 
+      //              && request.auth.token.email.matches('.*@kms-technology.com$');
+    }
   }
 }
 
