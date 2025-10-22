@@ -71,7 +71,6 @@
 
         .playbook-tab:hover {
             border-color: #27aae1;
-            color: #27aae1;
         }
 
         .playbook-card {
@@ -3377,20 +3376,7 @@
 
         // Manual data fallback function
         function tryManualDataFallback() {
-            const manualData = [
-                // Individual data
-                { no: '1', id: '2246', fullName: 'Trinh Vũ Minh Hùng', function: 'Engineering', subDepartment: 'LNI teams', account: 'hungtrink@kms-technology.com', points: 100 },
-                { no: '2', id: '2243', fullName: 'Nhi Ngô', function: 'HR', subDepartment: 'Grove HR', account: 'nhingo@kms-technology.com', points: 20 },
-                { no: '3', id: '2243', fullName: 'Nhi Ngô A', function: 'HR', subDepartment: 'Thanos teams', account: 'nhingoA@kms-technology.com', points: 20 },
-                { no: '4', id: '2246', fullName: 'Trinh Vũ Minh A', function: 'Engineering', subDepartment: 'Digital hands teams', account: 'hungtrinh@kms-technology.com', points: 100 },
-                { no: '5', id: '2243', fullName: 'Nhi Ngô B', function: 'Security', subDepartment: 'ABC Team', account: 'nhingoB@kms-technology.com', points: 20 },
-
-                // Team data
-                { no: '1', function: 'Engineering', subDepartment: 'ABC', account: 'hung.trinh@gmail.com', accumulatedPoints: 100, teamSize: 10, pointsPerEmployee: 10.0 },
-                { no: '2', function: 'BA', subDepartment: 'Kobiton', account: 'ba@gmail.com', accumulatedPoints: 20, teamSize: 8, pointsPerEmployee: 2.5 },
-                { no: '3', function: 'Testing', subDepartment: 'Def', account: 'testing@gmail.com', accumulatedPoints: 40, teamSize: 8, pointsPerEmployee: 5.0 },
-                { no: '4', function: 'Security', subDepartment: 'efg', account: 'security@gmail.com', accumulatedPoints: 50, teamSize: 7, pointsPerEmployee: 7.1 }
-            ];
+            const manualData = [];
 
             // Parse and cache the data properly
             const individualData = manualData.filter(item => item.id && item.fullName);
@@ -3505,6 +3491,7 @@
 
         // Load leaderboard data from Google Apps Script
         function loadLeaderboardData() {
+
             try {
                 // Show loading state
                 const individualBoard = document.getElementById('individualLeaderboard');
@@ -3540,6 +3527,8 @@
                 const callbackName = 'leaderboardCallback_' + Date.now();
                 const script = document.createElement('script');
                 let callbackExecuted = false;
+
+
 
                 // Create global callback function
                 window[callbackName] = function (result) {
@@ -3840,7 +3829,7 @@
                         rowColorClass = 'bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200';
                         pointsColorClass = 'text-orange-600 font-bold';
                     }
-
+                    console.log("entry:", entry)
                     if (isTeamData) {
                         // Team leaderboard row
                         const highlightedAccount = highlightSearchTerms(entry.account || 'Unknown', currentSearchQuery.team);
@@ -3855,7 +3844,7 @@
                                 <div class="col-span-2 truncate pl-1">${highlightedAccount}</div>
                                 <div class="col-span-1 font-semibold ${pointsColorClass} text-center w-16">${entry.accumulatedPoints || 0}</div>
                                 <div class="col-span-1 font-medium text-center w-12">${entry.teamSize || 'N/A'}</div>
-                                <div class="col-span-3 font-semibold ${pointsColorClass} text-center">${entry.pointsPerEmployee || entry.pointsPerTeamSize || 'N/A'}</div>
+                                <div class="col-span-3 font-semibold ${pointsColorClass} text-center">${entry.pointsPerTeamMember || 'N/A'}</div>
                             </div>
                         `;
                     } else {
@@ -4486,12 +4475,12 @@
 
             function handleTouchMove(e) {
                 if (!isMobile) return;
-                
+
                 const currentX = e.touches[0].clientX;
                 const currentY = e.touches[0].clientY;
                 const diffX = Math.abs(currentX - startX);
                 const diffY = Math.abs(currentY - startY);
-                
+
                 // Only prevent default if horizontal swipe is more significant than vertical
                 if (diffX > diffY && diffX > 10) {
                     isDragging = true;
@@ -4501,7 +4490,7 @@
 
             function handleTouchEnd(e) {
                 if (!isMobile || !isDragging) return;
-                
+
                 const endX = e.changedTouches[0].clientX;
                 const diffX = startX - endX;
                 const threshold = 50; // Minimum swipe distance
@@ -4518,7 +4507,7 @@
                         updateSlider();
                     }
                 }
-                
+
                 isDragging = false;
             }
 
@@ -4539,7 +4528,7 @@
                 if (isMobile || !isDragging) return;
                 isDragging = false;
                 viewport.style.cursor = 'grab';
-                
+
                 const endX = e.clientX;
                 const diffX = startX - endX;
                 const threshold = 50;
@@ -4581,13 +4570,13 @@
                 viewport.addEventListener('touchstart', handleTouchStart, { passive: true });
                 viewport.addEventListener('touchmove', handleTouchMove, { passive: false });
                 viewport.addEventListener('touchend', handleTouchEnd, { passive: true });
-                
+
                 // Mouse events for desktop drag (optional)
                 viewport.addEventListener('mousedown', handleMouseDown);
                 viewport.addEventListener('mousemove', handleMouseMove);
                 viewport.addEventListener('mouseup', handleMouseUp);
                 viewport.addEventListener('mouseleave', handleMouseUp);
-                
+
                 // Set cursor style for desktop
                 if (!isMobile) {
                     viewport.style.cursor = 'grab';
