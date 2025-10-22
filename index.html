@@ -1407,6 +1407,27 @@
             transform: translateY(-50%) translateX(50%);
         }
 
+        /* Pagination Dots Styles */
+        .slider-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider-dot:hover {
+            background-color: #9ca3af;
+            transform: scale(1.2);
+        }
+
+        .slider-dot.active {
+            background-color: #27aae1;
+            width: 24px;
+            border-radius: 5px;
+        }
+
         #playbooksGrid .insta-post {
             flex-shrink: 0;
             width: calc((100% - 3rem) / 3);
@@ -1705,7 +1726,7 @@
         <div class="container mx-auto px-4 sm:px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-3">
-                    <div class="flex items-center justify-center">
+                    <div class="flex items-center justify-center cursor-pointer" onclick="window.location.reload()">
                         <img src="https://kms-technology.com/wp-content/uploads/2022/03/logo-white.svg"
                             alt="KMS Technology" class="h-10 md:h-12 lg:h-14 w-auto"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -1931,6 +1952,11 @@
                     class="slider-nav absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 disabled:opacity-50">
                     <i class="fas fa-chevron-right"></i>
                 </button>
+
+                <!-- Pagination Dots -->
+                <div id="slider-dots" class="flex justify-center gap-2 mt-6">
+                    <!-- Dots will be generated dynamically -->
+                </div>
             </div>
         </div>
 
@@ -2089,219 +2115,17 @@
                 </p>
             </div>
 
-            <!-- Stakeholder Row -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12 fade-in">
-                <div class="text-center">
-                    <div class="bg-gray-200 rounded-lg p-4 sm:p-6 shadow-md">
-                        <h3 class="font-bold text-sm sm:text-base text-gray-800">Tip Submitter</h3>
+            <!-- Workflow Diagram Image -->
+            <div class="fade-in mb-12 sm:mb-16">
+                <div class="max-w-7xl mx-auto">
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                        <img src="https://res.cloudinary.com/hypertal/image/upload/v1761114971/kms/How_to_Participate_kdijpk.jpg"
+                            alt="How to Participate Workflow Diagram" class="w-full h-auto" loading="lazy" />
                     </div>
                 </div>
-                <div class="text-center">
-                    <div class="bg-gray-200 rounded-lg p-4 sm:p-6 shadow-md">
-                        <h3 class="font-bold text-sm sm:text-base text-gray-800">AI Taskforce</h3>
-                    </div>
-                </div>
-                <div class="text-center">
-                    <div class="bg-gray-200 rounded-lg p-4 sm:p-6 shadow-md">
-                        <h3 class="font-bold text-sm sm:text-base text-gray-800">L&OD</h3>
-                    </div>
-                </div>
-                <div class="text-center">
-                    <div class="bg-gray-200 rounded-lg p-4 sm:p-6 shadow-md">
-                        <h3 class="font-bold text-sm sm:text-base text-gray-800">Other Employees</h3>
-                    </div>
-                </div>
+
+
             </div>
-
-
-            <!-- Process Flow Diagram -->
-            <div class="max-w-7xl mx-auto fade-in">
-                <div class="relative bg-white rounded-2xl p-8 sm:p-12 shadow-xl overflow-visible"
-                    style="min-height: 800px;">
-
-
-                    <!-- Left Column: Process Categories (Swimlanes) -->
-                    <div class="absolute left-8 top-24 space-y-20 lg:space-y-24 hidden lg:block">
-                        <!-- Tip Submission -->
-                        <div class="bg-gray-200 rounded-xl p-4 w-40 text-center shadow-md">
-                            <div class="text-2xl mb-2">📝</div>
-                            <h4 class="font-bold text-sm text-gray-800 leading-tight">Tip<br>Submission</h4>
-                        </div>
-
-                        <!-- Tip Validation -->
-                        <div class="bg-gray-200 rounded-xl p-4 w-40 text-center shadow-md">
-                            <div class="text-2xl mb-2">✅</div>
-                            <h4 class="font-bold text-sm text-gray-800 leading-tight">Tip<br>Validation</h4>
-                        </div>
-
-                        <!-- Tip Publication -->
-                        <div class="bg-gray-200 rounded-xl p-4 w-40 text-center shadow-md">
-                            <div class="text-2xl mb-2">🚀</div>
-                            <h4 class="font-bold text-sm text-gray-800 leading-tight">Tip<br>Publication</h4>
-                        </div>
-                    </div>
-
-                    <!-- Main Flow: Centered Layout -->
-                    <div class="lg:ml-64 lg:mr-64">
-
-                        <!-- Submit Tip Box -->
-                        <div class="flex justify-center mb-8">
-                            <div
-                                class="bg-gradient-to-r from-cyan-300 to-cyan-400 border-2 border-cyan-500 rounded-3xl p-6 w-80 lg:w-96 text-center shadow-lg">
-                                <h3 class="font-bold text-base lg:text-lg text-gray-800">Submit the tip via form</h3>
-                            </div>
-                        </div>
-
-                        <!-- Vertical Connecting Line -->
-                        <div class="flex justify-center mb-8">
-                            <div class="w-0.5 h-16 bg-gray-600"></div>
-                        </div>
-
-                        <!-- Decision Diamond with Complete Flow -->
-                        <div class="relative flex justify-center mb-20">
-                            <!-- Main Diamond -->
-                            <div
-                                class="bg-gradient-to-br from-[#27aae1] to-blue-600 shadow-xl transform rotate-45 w-56 h-56 flex items-center justify-center relative z-10">
-                                <div class="transform -rotate-45 text-center">
-                                    <div class="text-white font-bold text-sm leading-tight px-2">
-                                        Evaluate, validate<br>the submitted tip
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Left Flow: Suggested for Improvement -->
-                            <div class="absolute left-0 top-1/2 transform -translate-y-1/2">
-                                <!-- Horizontal line from diamond to left -->
-                                <div class="w-32 h-0.5 bg-gray-600 -translate-x-full relative">
-                                    <!-- Left arrow -->
-                                    <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1">
-                                        <div
-                                            class="w-0 h-0 border-t-2 border-b-2 border-r-6 border-t-transparent border-b-transparent border-r-gray-600">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Red improvement label -->
-                                <div class="absolute -top-10 -left-32 w-32">
-                                    <div
-                                        class="bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-bold text-center shadow-lg">
-                                        Suggested for improvement
-                                    </div>
-                                </div>
-
-                                <!-- Vertical line going up for feedback loop -->
-                                <div class="absolute -left-16 -top-40">
-                                    <div class="w-0.5 h-32 bg-gray-600 relative">
-                                        <!-- Up arrow -->
-                                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1">
-                                            <div
-                                                class="w-0 h-0 border-l-2 border-r-2 border-b-6 border-l-transparent border-r-transparent border-b-gray-600">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Horizontal line back to submit box -->
-                                <div class="absolute -left-16 -top-40">
-                                    <div class="w-16 h-0.5 bg-gray-600"></div>
-                                </div>
-                            </div>
-
-                            <!-- Right Flow: Approved -->
-                            <div class="absolute right-0 top-1/2 transform -translate-y-1/2">
-                                <!-- Horizontal line from diamond to right -->
-                                <div class="w-24 h-0.5 bg-gray-600 translate-x-full relative">
-                                    <!-- Right arrow -->
-                                    <div class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1">
-                                        <div
-                                            class="w-0 h-0 border-t-2 border-b-2 border-l-6 border-t-transparent border-b-transparent border-l-gray-600">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Green approved label -->
-                                <div class="absolute -top-8 right-24 w-20">
-                                    <div
-                                        class="bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-bold text-center shadow-lg">
-                                        Approved
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Bottom Flow: Continue -->
-                            <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-                                <div class="w-0.5 h-16 bg-gray-600 relative">
-                                    <!-- Down arrow -->
-                                    <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1">
-                                        <div
-                                            class="w-0 h-0 border-l-2 border-r-2 border-t-6 border-l-transparent border-r-transparent border-t-gray-600">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Publish Box -->
-                        <div class="flex justify-center mb-8">
-                            <div
-                                class="bg-gradient-to-r from-cyan-300 to-cyan-400 border-2 border-cyan-500 rounded-3xl p-6 w-80 lg:w-96 text-center shadow-lg relative">
-                                <h3 class="font-bold text-base lg:text-lg text-gray-800">Publish practical use cases and
-                                    update in AI Playbook</h3>
-
-                                <!-- Horizontal arrow to community box (desktop only) -->
-                                <div
-                                    class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-full hidden xl:block">
-                                    <div class="w-20 h-0.5 bg-gray-600 relative">
-                                        <!-- Right arrow -->
-                                        <div class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1">
-                                            <div
-                                                class="w-0 h-0 border-t-2 border-b-2 border-l-6 border-t-transparent border-b-transparent border-l-gray-600">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Vertical Connecting Line -->
-                        <div class="flex justify-center mb-8">
-                            <div class="w-0.5 h-16 bg-gray-600"></div>
-                        </div>
-
-                        <!-- Update Leaderboards Box -->
-                        <div class="flex justify-center">
-                            <div
-                                class="bg-gradient-to-r from-cyan-300 to-cyan-400 border-2 border-cyan-500 rounded-3xl p-6 w-80 lg:w-96 text-center shadow-lg">
-                                <h3 class="font-bold text-base lg:text-lg text-gray-800">Update monthly Leaderboards &
-                                    Shout-outs</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Side: Community Box -->
-                    <div class="absolute right-8 top-1/2 transform -translate-y-1/2 hidden xl:block">
-                        <div
-                            class="bg-gradient-to-r from-cyan-300 to-cyan-400 border-2 border-cyan-500 rounded-3xl p-6 w-64 text-center shadow-lg">
-                            <h3 class="font-bold text-base text-gray-800 mb-3">Check out the AI Playbook</h3>
-                            <p class="text-sm text-gray-700 leading-relaxed">Your comments, reactions help validate the
-                                tips!</p>
-                        </div>
-                    </div>
-
-                    <!-- Mobile/Tablet: Simplified Flow -->
-                    <div class="xl:hidden">
-                        <!-- Community Box for smaller screens -->
-                        <div class="mt-12 flex justify-center">
-                            <div
-                                class="bg-gradient-to-r from-cyan-300 to-cyan-400 border-2 border-cyan-500 rounded-2xl p-4 w-72 sm:w-80 text-center shadow-lg">
-                                <h3 class="font-bold text-sm text-gray-800 mb-2">Check out the AI Playbook</h3>
-                                <p class="text-xs text-gray-700">Your comments, reactions help validate the tips!</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
 
             <!-- Call to Action -->
             <div class="mt-12 sm:mt-16 fade-in">
@@ -2324,10 +2148,9 @@
     <section id="rewards" class="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-cyan-50 to-blue-100">
         <div class="container mx-auto px-4 sm:px-6">
             <!-- Header with Blue Background -->
-            <div
-                class="bg-gradient-to-r from-blue-800 to-blue-900 text-white rounded-2xl p-6 sm:p-8 mb-12 sm:mb-16 fade-in">
-                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">3. Scheme & Rewards</h2>
-                <p class="text-lg sm:text-xl opacity-90">
+            <div class="text-center mb-12 sm:mb-16 fade-in">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4 sm:mb-6">Scheme & Rewards</h2>
+                <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4 mb-6">
                     What prize is waiting for you?
                 </p>
             </div>
@@ -2345,7 +2168,7 @@
                             <div class="relative">
                                 <!-- Reward Box with Connection -->
                                 <div
-                                    class="bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 lg:p-8 text-white shadow-xl mb-6 relative">
+                                    class="flex items-center justify-center bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 lg:p-8 text-white shadow-xl mb-6 relative h-[128px]">
                                     <h3 class="text-2xl lg:text-3xl font-bold">200,000 VND</h3>
                                     <!-- Connecting line to description -->
                                     <div
@@ -2388,7 +2211,7 @@
                             <div class="relative">
                                 <!-- Reward Box with Connection -->
                                 <div
-                                    class="bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 lg:p-8 text-white shadow-xl mb-6 relative">
+                                    class="bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 lg:p-8 text-white shadow-xl mb-6 relative h-[128px] flex items-center justify-center">
                                     <h3 class="text-2xl lg:text-3xl font-bold">2,000,000 VND</h3>
                                     <!-- Connecting line to description -->
                                     <div
@@ -2477,7 +2300,8 @@
                             <div
                                 class="bg-gradient-to-r from-[#27aae1] to-blue-600 rounded-2xl p-6 text-center shadow-lg">
                                 <h3 class="text-white font-bold text-lg lg:text-xl">Be credited in Learning Profile &
-                                    Monthly Leaderboard</h3>
+                                    Monthly
+                                </h3>
                             </div>
                         </div>
                     </div>
@@ -2545,6 +2369,164 @@
                             <p class="text-sm text-gray-600">Submit your tip and track your progress on the leaderboard
                             </p>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to get the point Section -->
+    <section class="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-12 sm:mb-16 fade-in">
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4 sm:mb-6">How to get the
+                        point</h2>
+                </div>
+
+
+                <!-- Points Table -->
+                <div class="bg-white rounded-b-2xl shadow-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="border-b-2 border-gray-300">
+                                    <th class="p-0 border-r-2 border-gray-300 bg-white" style="width: 40%;"></th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 border-r border-gray-300 bg-white"
+                                        style="width: 7.5%;">10</th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 border-r border-gray-300 bg-white"
+                                        style="width: 7.5%;">20</th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 border-r border-gray-300 bg-white"
+                                        style="width: 7.5%;">30</th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 border-r border-gray-300 bg-white"
+                                        style="width: 7.5%;">40</th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 border-r border-gray-300 bg-white"
+                                        style="width: 7.5%;">50</th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 border-r border-gray-300 bg-white"
+                                        style="width: 7.5%;">60</th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 border-r border-gray-300 bg-white"
+                                        style="width: 7.5%;">70</th>
+                                    <th class="text-center py-4 px-2 text-lg sm:text-xl font-bold text-gray-800 bg-white"
+                                        style="width: 7.5%;">70</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Row 1: Submission -->
+                                <tr class="border-b-2 border-gray-300">
+                                    <td class="p-4 sm:p-6 border-r-2 border-gray-300 bg-white">
+                                        <div class="flex items-center gap-3">
+                                            <div class="text-4xl">🤖</div>
+                                            <div class="font-semibold text-base sm:text-lg text-gray-800">Submission
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td colspan="1"
+                                        class="p-0 bg-[#0a1f44] text-white text-center border-r border-gray-300">
+                                        <div class="py-6 px-2 font-bold text-lg sm:text-xl">10</div>
+                                    </td>
+                                    <td colspan="7" class="bg-white"></td>
+                                </tr>
+
+                                <!-- Row 2: Valid Submission with Level Classification -->
+                                <tr class="border-b-2 border-gray-300">
+                                    <td rowspan="3" class="p-4 sm:p-6 border-r-2 border-gray-300 bg-white align-top">
+                                        <div class="flex items-start gap-3">
+                                            <div class="text-4xl flex-shrink-0">✅</div>
+                                            <div>
+                                                <div class="font-semibold text-base sm:text-lg text-gray-800 mb-1">
+                                                    Valid Submission is approved by AI Taskforce with level
+                                                    classification
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-2 sm:px-4 border-r-2 border-gray-300 bg-white">
+                                        <div class="text-sm sm:text-base text-gray-700 italic">Basic level</div>
+                                    </td>
+                                    <td class="p-0 bg-[#0a1f44] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">10</div>
+                                    </td>
+                                    <td colspan="1"
+                                        class="p-0 bg-[#1e3a6b] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">+20</div>
+                                    </td>
+                                    <td colspan="6" class="bg-white"></td>
+                                </tr>
+                                <tr class="border-b border-gray-300">
+                                    <td class="py-3 px-2 sm:px-4 border-r-2 border-gray-300 bg-white">
+                                        <div class="text-sm sm:text-base text-gray-700 italic">Intermediate level</div>
+                                    </td>
+                                    <td class="p-0 bg-[#0a1f44] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">10</div>
+                                    </td>
+                                    <td colspan="2"
+                                        class="p-0 bg-[#2447a5] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">+30</div>
+                                    </td>
+                                    <td colspan="5" class="bg-white"></td>
+                                </tr>
+                                <tr class="border-b-2 border-gray-300">
+                                    <td class="py-3 px-2 sm:px-4 border-r-2 border-gray-300 bg-white">
+                                        <div class="text-sm sm:text-base text-gray-700 italic">Advanced level</div>
+                                    </td>
+                                    <td class="p-0 bg-[#0a1f44] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">10</div>
+                                    </td>
+                                    <td colspan="3"
+                                        class="p-0 bg-[#2c5aa0] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">+40</div>
+                                    </td>
+                                    <td colspan="4" class="bg-white"></td>
+                                </tr>
+
+                                <!-- Row 3: Valid Submission based on Reactions & Comments -->
+                                <tr class="border-b border-gray-300">
+                                    <td rowspan="3" class="p-4 sm:p-6 border-r-2 border-gray-300 bg-white align-top">
+                                        <div class="flex items-start gap-3">
+                                            <div class="text-4xl flex-shrink-0">❤️</div>
+                                            <div>
+                                                <div class="font-semibold text-base sm:text-lg text-gray-800 mb-1">
+                                                    Valid Submission based on reactions & comments in AI for Everyone
+                                                    Site
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-2 sm:px-4 border-r-2 border-gray-300 bg-white">
+                                        <div class="text-sm sm:text-base text-gray-700 italic">10-30 reactions and
+                                            comments</div>
+                                    </td>
+                                    <td colspan="5" class="bg-white border-r border-gray-300"></td>
+                                    <td colspan="1"
+                                        class="p-0 bg-[#5eb3d1] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">+10</div>
+                                    </td>
+                                    <td colspan="2" class="bg-white"></td>
+                                </tr>
+                                <tr class="border-b border-gray-300">
+                                    <td class="py-3 px-2 sm:px-4 border-r-2 border-gray-300 bg-white">
+                                        <div class="text-sm sm:text-base text-gray-700 italic">30-50 reactions and
+                                            comments</div>
+                                    </td>
+                                    <td colspan="5" class="bg-white border-r border-gray-300"></td>
+                                    <td colspan="2"
+                                        class="p-0 bg-[#62b8d6] text-white text-center border-r border-gray-300">
+                                        <div class="py-3 font-bold text-base sm:text-lg">+20</div>
+                                    </td>
+                                    <td colspan="1" class="bg-white"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-2 sm:px-4 border-r-2 border-gray-300 bg-white">
+                                        <div class="text-sm sm:text-base text-gray-700 italic">>50 reactions and
+                                            comments</div>
+                                    </td>
+                                    <td colspan="5" class="bg-white border-r border-gray-300"></td>
+                                    <td colspan="3" class="p-0 bg-[#6dc0dd] text-white text-center">
+                                        <div class="py-3 font-bold text-base sm:text-lg">+30</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -3230,16 +3212,17 @@
             if (type === 'success') bgColor = 'bg-green-500 text-white';
             if (type === 'info') bgColor = 'bg-blue-500 text-white';
 
-            notification.className = `notification fixed top-20 left-4 right-4 sm:right-4 sm:left-auto z-50 p-4 rounded-lg shadow-lg max-w-md sm:max-w-sm mx-auto sm:mx-0 transform translate-y-full sm:translate-y-0 sm:translate-x-full transition-all duration-300 ${bgColor}`;
+            // Fixed positioning for desktop: top-right corner, properly visible
+            notification.className = `notification fixed top-24 right-4 left-4 sm:left-auto sm:right-6 z-[9999] p-4 rounded-lg shadow-xl max-w-md sm:max-w-sm mx-auto sm:mx-0 transform translate-x-[120%] transition-all duration-300 ease-out ${bgColor}`;
 
             notification.innerHTML = `
                 <div class="flex items-center">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'info' ? 'fa-info-circle' : 'fa-exclamation-triangle'} mr-3"></i>
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'info' ? 'fa-info-circle' : 'fa-exclamation-triangle'} mr-3 text-xl"></i>
                     <div class="flex-1">
-                        <div class="font-semibold">${type === 'success' ? 'Success!' : type === 'info' ? 'Info' : 'Error'}</div>
+                        <div class="font-semibold text-base">${type === 'success' ? 'Success!' : type === 'info' ? 'Info' : 'Error'}</div>
                         <div class="text-sm opacity-90">${message}</div>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200 transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -3249,17 +3232,21 @@
             document.body.appendChild(notification);
             console.log('Notification appended successfully');
 
-            // Animate in
-            setTimeout(() => {
-                console.log('Animating notification in...');
-                notification.classList.remove('translate-y-full', 'translate-x-full');
-            }, 100);
+            // Animate in - slide from right
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    console.log('Animating notification in...');
+                    notification.classList.remove('translate-x-[120%]');
+                    notification.classList.add('translate-x-0');
+                }, 50);
+            });
 
             // Auto-remove after 5 seconds
             setTimeout(() => {
                 if (notification.parentElement) {
                     console.log('Auto-removing notification...');
-                    notification.classList.add('translate-y-full', 'translate-x-full');
+                    notification.classList.remove('translate-x-0');
+                    notification.classList.add('translate-x-[120%]');
                     setTimeout(() => notification.remove(), 300);
                 }
             }, 5000);
@@ -4253,6 +4240,38 @@
                 // Prepare tab filter
                 const tabs = document.querySelectorAll('.playbook-tab');
                 let activeCategory = 'productivity';
+
+                // Count playbooks per category and update tab labels
+                function updateTabCounts() {
+                    const categoryCounts = {
+                        'productivity': 0,
+                        'data': 0,
+                        'cx': 0,
+                        'innovation': 0
+                    };
+
+                    // Count only approved playbooks
+                    firebasePlaybooks.forEach(pb => {
+                        if (pb.isApproved === true) {
+                            const category = mapCategory(pb.category);
+                            if (categoryCounts.hasOwnProperty(category)) {
+                                categoryCounts[category]++;
+                            }
+                        }
+                    });
+
+                    // Update tab labels with counts
+                    tabs.forEach(tab => {
+                        const category = tab.getAttribute('data-category');
+                        const count = categoryCounts[category] || 0;
+                        const originalLabel = tab.textContent.split(' (')[0]; // Get label without count
+                        tab.textContent = `${originalLabel} (${count})`;
+                    });
+                }
+
+                // Update counts initially
+                updateTabCounts();
+
                 tabs.forEach(tab => {
                     if (tab.classList.contains('tab-active')) {
                         activeCategory = tab.getAttribute('data-category');
@@ -4399,7 +4418,7 @@
             // Load leaderboard data after a short delay to ensure page is ready
             setTimeout(() => {
                 loadLeaderboardData();
-            }, 1500);
+            }, 2000);
 
             // Wait longer to ensure Firebase is fully initialized
             setTimeout(async () => {
@@ -4424,6 +4443,7 @@
             const prevButton = document.getElementById('slider-prev');
             const nextButton = document.getElementById('slider-next');
             const viewport = document.querySelector('.slider-viewport');
+            const dotsContainer = document.getElementById('slider-dots');
             const items = track.querySelectorAll('.insta-post');
 
             if (!items.length) return;
@@ -4438,6 +4458,41 @@
                 if (window.innerWidth <= 768) return 1;
                 if (window.innerWidth <= 1024) return 2;
                 return 3;
+            }
+
+            function createDots() {
+                if (!dotsContainer) return;
+
+                const itemsToShow = getItemsToShow();
+                const totalPages = Math.max(1, items.length - itemsToShow + 1);
+
+                dotsContainer.innerHTML = '';
+
+                for (let i = 0; i < totalPages; i++) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('slider-dot');
+                    if (i === 0) dot.classList.add('active');
+
+                    dot.addEventListener('click', () => {
+                        currentIndex = i;
+                        updateSlider();
+                    });
+
+                    dotsContainer.appendChild(dot);
+                }
+            }
+
+            function updateDots() {
+                if (!dotsContainer) return;
+
+                const dots = dotsContainer.querySelectorAll('.slider-dot');
+                dots.forEach((dot, index) => {
+                    if (index === currentIndex) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
             }
 
             function updateSlider() {
@@ -4463,6 +4518,9 @@
                     prevButton.disabled = (currentIndex === 0);
                     nextButton.disabled = (currentIndex >= totalItems - itemsToShow);
                 }
+
+                // Update dots
+                updateDots();
             }
 
             // Touch/Swipe events for mobile
@@ -4586,9 +4644,12 @@
             window.addEventListener('resize', () => {
                 currentIndex = 0;
                 isMobile = window.innerWidth <= 768;
+                createDots();
                 updateSlider();
             });
 
+            // Initialize dots and slider
+            createDots();
             updateSlider();
         }
 
