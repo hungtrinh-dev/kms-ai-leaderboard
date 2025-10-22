@@ -9,6 +9,7 @@ const FIRESTORE_COLLECTION_INDIVIDUAL_LEADERBOARD = 'individual-leaderboard';
 const FIRESTORE_COLLECTION_TEAM_LEADERBOARD = 'team-leaderboard';
 const LEADERBOARD_SHEET_NAME = 'Leaderboard by Individual'; // Change this to match your sheet name
 const TEAM_LEADERBOARD_SHEET_NAME = 'Leaderboard by Account/Department'; // Change this to match your team sheet name
+const FIRESTORE_TABLE_REACTIONS = 'reactions';
 
 function doPost(e) {
   try {
@@ -578,7 +579,8 @@ function savePlaybookToFirebase(submissionData) {
         email: { stringValue: submissionData.email || '' },
         isApproved: { booleanValue: false },
         timestamp: { timestampValue: submissionData.timestamp || new Date().toISOString() },
-        sheetKey: { stringValue: key }
+        sheetKey: { stringValue: key },
+        supportingMaterials: { stringValue: submissionData.supportingMaterials || '' }
       }
     };
 
@@ -664,7 +666,7 @@ function updatePlaybookApproveStatus(sheetKey, isApproved) {
 
 function updatePlayBookByKey(documentName, data) {
   try {
-    const updateMask = 'updateMask.fieldPaths=category&updateMask.fieldPaths=description&updateMask.fieldPaths=email&updateMask.fieldPaths=isApproved&updateMask.fieldPaths=timestamp&updateMask.fieldPaths=sheetKey';
+    const updateMask = 'updateMask.fieldPaths=category&updateMask.fieldPaths=description&updateMask.fieldPaths=email&updateMask.fieldPaths=isApproved&updateMask.fieldPaths=timestamp&updateMask.fieldPaths=sheetKey&updateMask.fieldPaths=supportingMaterials';
     const updateUrl = `https://firestore.googleapis.com/v1/${documentName}?${updateMask}`;
 
     const firestoreData = {
@@ -674,7 +676,8 @@ function updatePlayBookByKey(documentName, data) {
         email: { stringValue: data.email || '' },
         isApproved: { booleanValue: data.isApproved || false },
         timestamp: { timestampValue: data.timestamp || new Date().toISOString() },
-        sheetKey: { stringValue: data.sheetKey }
+        sheetKey: { stringValue: data.sheetKey },
+        supportingMaterials: { stringValue: data.supportingMaterials || '' }
       }
     };
 
@@ -692,6 +695,64 @@ function updatePlayBookByKey(documentName, data) {
     }
   } catch (error) {
     Logger.log('Exception in updatePlayBookByKey: ' + error.toString());
+  }
+}
+
+function countReactionsForPlaybook(playbookId) {
+  const url = `${FIRESTORE_BASE_URL}:runAggregationQuery`;
+
+  const queryPayload = {
+    "structuredAggregationQuery": {
+      "structuredQuery": {
+        "from": [{ "collectionId": FIRESTORE_TABLE_REACTIONS }],
+        "where": {
+          "fieldFilter": {
+            "field": { "fieldPath": "playbook_id" },
+            "op": "EQUAL",
+            "value": { "stringValue": playbookId }
+          }
+        }
+      },
+      "aggregations": [
+        {
+          "count": {},
+          "alias": "total_count"
+        }
+      ]
+    }
+  };
+
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    payload: JSON.stringify(queryPayload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const responseBody = response.getContentText();
+    const responseCode = response.getResponseCode();
+
+    if (responseCode !== 200) {
+      Logger.log(`Error counting reactions for ${playbookId}. Code: ${responseCode}, Body: ${responseBody}`);
+      return 0;
+    }
+
+    const result = JSON.parse(responseBody);
+
+    if (result && result[0] && result[0].result && result[0].result.aggregateFields) {
+      const count = result[0].result.aggregateFields.total_count.integerValue;
+      return parseInt(count) || 0;
+    } else {
+      return 0;
+    }
+
+  } catch (error) {
+    Logger.log(`Exception while counting reactions for ${playbookId}: ${error.toString()}`);
+    return 0;
   }
 }
 
@@ -801,6 +862,7 @@ function syncDataSheetToFirebase() {
       email: email,
       category: row[2] || '',
       description: row[3] || '',
+      supportingMaterials: row[4] || '',
       isApproved: (row[10] === "Approved"),
       sheetKey: sheetKey
     };
@@ -2006,5 +2068,61 @@ function uninstallTeamLeaderboardSyncTrigger() {
 
   Logger.log(`Removed ${removed} team leaderboard sync triggers`);
   SpreadsheetApp.getUi().alert('Success', `Removed ${removed} automatic team sync trigger(s).`, SpreadsheetApp.getUi().ButtonSet.OK);
+}
+function syncPlaybookLikes() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+
+  Logger.log(`Starting sync for ${data.length} rows...`);
+
+  const LIKE_COLUMN_INDEX = 14;
+  const LIKE_COLUMN_SHEET = 15;
+
+  data.forEach((row, index) => {
+    const rowNumber = index + 2;
+
+    try {
+      const sheetTimestampObject = row[0];
+      const email = row[1];
+
+      if (!sheetTimestampObject || !email) {
+        Logger.log(`Skipping row ${rowNumber}: Missing Timestamp or Email.`);
+        return;
+      }
+
+      const standardTimestamp = new Date(sheetTimestampObject).toISOString();
+      const sheetKey = createPlaybookKey(email, standardTimestamp);
+
+      const documentName = findDocumentNameByKey(sheetKey);
+
+      if (documentName) {
+        const playbookId = documentName.split('/').pop();
+
+        if (!playbookId) {
+          Logger.log(`ERROR in row ${rowNumber}: Could not extract playbookId from ${documentName}`);
+          sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(0);
+          return;
+        }
+
+        const likeCount = countReactionsForPlaybook(playbookId);
+
+        sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(likeCount);
+        Logger.log(`Row ${rowNumber}: Found ${playbookId}. Setting like count = ${likeCount}.`);
+
+      } else {
+        Logger.log(`Row ${rowNumber}: Playbook not found for key ${sheetKey}. Setting like count = 0.`);
+        sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(0);
+      }
+
+    } catch (error) {
+      Logger.log(`ERROR processing row ${rowNumber}: ${error.toString()}`);
+      sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue('Error');
+    }
+  });
+
+  Logger.log('Like sync completed.');
+  SpreadsheetApp.getUi().alert('Finished updating like counts!');
 }
 
