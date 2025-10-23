@@ -2996,10 +2996,6 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="loadLeaderboardData()"
-                    class="bg-gradient-to-r from-[#27aae1] to-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105 w-[180px]">
-                    <i class="fas fa-sync-alt mr-2"></i>Refresh Data
-                </button>
             </div>
             <!-- End Search Section -->
 
@@ -3036,21 +3032,19 @@
                         <div class="overflow-x-auto max-h-[500px] overflow-y-auto bg-white">
                             <!-- Table Header -->
                             <div
-                                class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-3 sm:p-4 sticky top-0 z-10 shadow-lg min-w-[900px]">
-                                <div class="grid grid-cols-12 gap-1 sm:gap-2 font-bold text-xs sm:text-sm">
-                                    <div class="col-span-1 text-white/80 text-center w-8">No</div>
-                                    <div class="col-span-2 text-white/80 truncate">Function</div>
+                                class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-3 sm:p-4 sticky top-0 z-10 shadow-lg min-w-[700px]">
+                                <div class="grid grid-cols-10 gap-1 sm:gap-2 font-bold text-xs sm:text-sm">
+                                    <div class="col-span-1 text-white/80 text-center">No</div>
+                                    <div class="col-span-3 text-white/80 truncate">Function</div>
                                     <div class="col-span-2 text-white/80 truncate">Sub-department (Program)</div>
                                     <div class="col-span-2 text-white/80 truncate">Account</div>
-                                    <div class="col-span-1 text-white/80 text-center w-16">Accumulated Points</div>
-                                    <div class="col-span-1 text-white/80 text-center w-12">Team Size</div>
-                                    <div class="col-span-3 text-white/80 text-center">Accumulated Points per Employee
+                                    <div class="col-span-2 text-white/80 text-center">Accumulated Points per Employee
                                     </div>
                                 </div>
                             </div>
                             <!-- Table Body -->
                             <div class="p-4">
-                                <div class="space-y-3 min-w-[900px] bg-gray-50/30"></div>
+                                <div class="space-y-3 min-w-[700px] bg-gray-50/30"></div>
                             </div>
                         </div>
                     </div>
@@ -3148,6 +3142,9 @@
                 // Load individual data if not cached (with podium update)
                 if (cachedLeaderboardData.individual && cachedLeaderboardData.individual.length > 0) {
                     displayLeaderboardData(cachedLeaderboardData.individual, false, true);
+                } else {
+                    // Show empty state
+                    displayEmptyLeaderboard(false);
                 }
             } else {
                 teamTab.classList.add('tab-active');
@@ -3167,6 +3164,9 @@
                 // Load team data if not cached (with podium update)
                 if (cachedLeaderboardData.team && cachedLeaderboardData.team.length > 0) {
                     displayLeaderboardData(cachedLeaderboardData.team, true, true);
+                } else {
+                    // Show empty state
+                    displayEmptyLeaderboard(true);
                 }
             }
         }
@@ -3972,68 +3972,98 @@
             const teamBoard = document.getElementById('teamLeaderboard');
             const displayBoard = isTeamData ? teamBoard : individualBoard;
 
-            // Update podium for empty state
+            // Update podium for empty state - hide it
             renderPodium({ first: null, second: null, third: null });
+
+            // Hide search input when empty
+            const individualSearchContainer = document.getElementById('individualSearchContainer');
+            const teamSearchContainer = document.getElementById('teamSearchContainer');
+            
+            if (isTeamData) {
+                teamSearchContainer.style.display = 'none';
+            } else {
+                individualSearchContainer.style.display = 'none';
+            }
 
             let emptyHtml = '';
 
             if (isTeamData) {
+                // Team leaderboard: show same engaging CTA as individual
                 emptyHtml = `
-                    <!-- Table Header -->
-                    <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                        <div class="grid grid-cols-4 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
-                            <div class="text-white/80">No</div>
-                            <div class="text-white/80">Function/Program</div>
-                            <div class="text-white/80">Account</div>
-                            <div class="text-white">Accumulated Points</div>
-                        </div>
-                    </div>
-                    <!-- Scrollable Table Body -->
-                    <div class="max-h-[500px] overflow-y-auto bg-white">
-                        <div class="p-4">
-                            <div class="text-center py-16 bg-gray-50/30">
-                                <div class="text-6xl mb-6 opacity-30">🏆</div>
-                                <h3 class="text-xl font-bold text-gray-600 mb-4">${isTeamData ? 'No Team Leaderboard Data Yet' : 'No Leaderboard Data Yet'}</h3>
-                                <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                                    Be the first to submit an AI tip and claim your spot on the leaderboard!
-                                </p>
+                    <div class="text-center py-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl">
+                        <div class="max-w-2xl mx-auto px-6">
+                            <!-- Animated trophy icon -->
+                            <div class="text-8xl mb-8 animate-bounce">
+                                🏆
+                            </div>
+                            
+                            <!-- Main heading -->
+                            <h3 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+                                Be the First AI Champion!
+                            </h3>
+                            
+                            <!-- Subheading -->
+                            <p class="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed">
+                                No one has submitted AI tips yet. <br class="hidden sm:block">
+                                <span class="font-semibold text-[#27aae1]">Be the pioneer</span> and claim your spot on the leaderboard!
+                            </p>
+                            
+                            <!-- CTA Button -->
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
                                 <a href="${GOOGLE_FORM_URL}" 
                                    target="_blank"
-                                   class="inline-block bg-gradient-to-r from-[#27aae1] to-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105">
-                                    <i class="fas fa-plus mr-2"></i>Submit Your First Tip
+                                   class="cta-button inline-flex items-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-full text-lg sm:text-xl z-10">
+                                    <span class="text-2xl">🚀</span>
+                                    <span>Submit Your First AI Tip</span>
+                                    <span class="text-xl">→</span>
                                 </a>
                             </div>
+                            
+                            <!-- Encouraging message -->
+                            <p class="text-sm sm:text-base mt-8 text-gray-500">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <strong>Pro tip:</strong> Share practical AI automation that saves time!
+                            </p>
                         </div>
                     </div>
                 `;
             } else {
+                // Individual leaderboard: show engaging CTA instead of table
                 emptyHtml = `
-                    <!-- Table Header -->
-                    <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                        <div class="grid grid-cols-6 gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
-                            <div class="text-white/80">No</div>
-                            <div class="text-white/80 pl-4">ID</div>
-                            <div class="text-white/80">Fullname</div>
-                            <div class="text-white/80">Account</div>
-                            <div class="text-white/80">Function</div>
-                            <div class="text-white">Points</div>
-                        </div>
-                    </div>
-                    <!-- Scrollable Table Body -->
-                    <div class="max-h-[500px] overflow-y-auto bg-white">
-                        <div class="p-4">
-                            <div class="text-center py-16 bg-gray-50/30">
-                                <div class="text-6xl mb-6 opacity-30">🏆</div>
-                                <h3 class="text-xl font-bold text-gray-600 mb-4">No Leaderboard Data Yet</h3>
-                                    <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                                        Be the first to submit an AI tip and claim your spot on the leaderboard!
-                                    </p>
+                    <div class="text-center py-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl">
+                        <div class="max-w-2xl mx-auto px-6">
+                            <!-- Animated trophy icon -->
+                            <div class="text-8xl mb-8 animate-bounce">
+                                🏆
+                            </div>
+                            
+                            <!-- Main heading -->
+                            <h3 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+                                Be the First AI Champion!
+                            </h3>
+                            
+                            <!-- Subheading -->
+                            <p class="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed">
+                                No one has submitted AI tips yet. <br class="hidden sm:block">
+                                <span class="font-semibold text-[#27aae1]">Be the pioneer</span> and claim your spot on the leaderboard!
+                            </p>
+                            
+                            <!-- CTA Button -->
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
                                 <a href="${GOOGLE_FORM_URL}" 
                                    target="_blank"
-                                   class="inline-block bg-gradient-to-r from-[#27aae1] to-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105">
-                                    <i class="fas fa-plus mr-2"></i>Submit Your First Tip
+                                   class="cta-button inline-flex items-center gap-3 px-8 sm:px-10 py-4 sm:py-5 rounded-full text-lg sm:text-xl z-10">
+                                    <span class="text-2xl">🚀</span>
+                                    <span>Submit Your First AI Tip</span>
+                                    <span class="text-xl">→</span>
                                 </a>
                             </div>
+                            
+                            <!-- Encouraging message -->
+                            <p class="text-sm sm:text-base mt-8 text-gray-500">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <strong>Pro tip:</strong> Share practical AI automation that saves time!
+                            </p>
                         </div>
                     </div>
                 `;
@@ -4067,6 +4097,15 @@
         // Render podium with top 3 performers
         function renderPodium(topPerformers) {
             const podiumContainer = document.getElementById('leaderboardPodium');
+
+            // Hide podium if all performers are null (empty leaderboard)
+            if (!topPerformers.first && !topPerformers.second && !topPerformers.third) {
+                podiumContainer.style.display = 'none';
+                return;
+            }
+
+            // Show podium if there's at least one performer
+            podiumContainer.style.display = 'block';
 
             // Create ordered array for easy iteration (1st, 2nd, 3rd)
             const performers = [topPerformers.first, topPerformers.second, topPerformers.third];
@@ -4121,6 +4160,16 @@
             const teamBoard = document.getElementById('teamLeaderboard');
             const displayBoard = isTeamData ? teamBoard : individualBoard;
 
+            // Show search input when there's data
+            const individualSearchContainer = document.getElementById('individualSearchContainer');
+            const teamSearchContainer = document.getElementById('teamSearchContainer');
+            
+            if (isTeamData) {
+                teamSearchContainer.style.display = 'block';
+            } else {
+                individualSearchContainer.style.display = 'block';
+            }
+
             // Update Podium Section FIRST (only if updatePodium is true)
             if (updatePodium) {
                 const topPerformers = getTopThreePerformers(leaderboardData, isTeamData);
@@ -4134,14 +4183,12 @@
                 html = `
                     <!-- Table Header -->
                     <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-3 sm:p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                        <div class="grid grid-cols-12 gap-1 sm:gap-2 font-bold text-xs sm:text-sm min-w-[900px]">
-                            <div class="col-span-1 text-white/80 text-center w-8">No</div>
-                            <div class="col-span-2 text-white/80 truncate">Function</div>
+                        <div class="grid grid-cols-10 gap-1 sm:gap-2 font-bold text-xs sm:text-sm min-w-[700px]">
+                            <div class="col-span-1 text-white/80 text-center">No</div>
+                            <div class="col-span-3 text-white/80 truncate">Function</div>
                             <div class="col-span-2 text-white/80 truncate">Sub-department (Program)</div>
                             <div class="col-span-2 text-white/80 truncate">Account</div>
-                            <div class="col-span-1 text-white/80 text-center w-16">Accumulated Points</div>
-                            <div class="col-span-1 text-white/80 text-center w-12">Team Size</div>
-                            <div class="col-span-3 text-white/80 text-center">Accumulated Points per Employee</div>
+                            <div class="col-span-2 text-white/80 text-center">Accumulated Points per Employee</div>
                         </div>
                     </div>
                 `;
@@ -4167,7 +4214,7 @@
                 <!-- Scrollable Table Body -->
                 <div class="max-h-[500px] overflow-y-auto bg-white">
                     <div class="p-4">
-                        <div class="space-y-3 min-w-[900px] bg-gray-50/30">
+                        <div class="space-y-3 min-w-[700px] bg-gray-50/30">
             `;
 
             if (leaderboardData.length === 0) {
@@ -4204,14 +4251,12 @@
                         const highlightedSubDepartment = highlightSearchTerms(entry.subDepartment || 'Unknown', currentSearchQuery.team);
 
                         html += `
-                            <div class="grid grid-cols-12 gap-1 sm:gap-2 p-2 sm:p-3 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
-                                <div class="col-span-1 font-medium text-center w-8">${index + 1}</div>
-                                <div class="col-span-2 font-medium truncate pl-1">${highlightedFunction}</div>
+                            <div class="grid grid-cols-10 gap-1 sm:gap-2 p-2 sm:p-3 ${rowColorClass} transition-colors rounded-lg text-xs sm:text-sm">
+                                <div class="col-span-1 font-medium text-center">${index + 1}</div>
+                                <div class="col-span-3 font-medium truncate pl-1">${highlightedFunction}</div>
                                 <div class="col-span-2 font-medium truncate pl-1">${highlightedSubDepartment}</div>
                                 <div class="col-span-2 truncate pl-1">${highlightedAccount}</div>
-                                <div class="col-span-1 font-semibold ${pointsColorClass} text-center w-16">${entry.accumulatedPoints || 0}</div>
-                                <div class="col-span-1 font-medium text-center w-12">${entry.teamSize || 'N/A'}</div>
-                                <div class="col-span-3 font-semibold ${pointsColorClass} text-center">${entry.pointsPerEmployee || 'N/A'}</div>
+                                <div class="col-span-2 font-semibold ${pointsColorClass} text-center">${entry.pointsPerEmployee || 'N/A'}</div>
                             </div>
                         `;
                     } else {
@@ -4287,9 +4332,9 @@
             const noResultsHtml = `
                 <!-- Table Header -->
                 <div class="bg-gradient-to-r from-[#27aae1] to-[#1e90ff] text-white p-4 sticky top-0 z-10 shadow-lg rounded-t-xl">
-                    <div class="grid ${isTeamData ? 'grid-cols-4' : 'grid-cols-6'} gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[600px]">
+                    <div class="grid ${isTeamData ? 'grid-cols-10' : 'grid-cols-6'} gap-2 sm:gap-4 font-bold text-sm sm:text-base min-w-[${isTeamData ? '700px' : '600px'}]">
                         ${isTeamData ?
-                    '<div class="text-center text-white/80">No</div><div class="text-center text-white/80">Function/Program</div><div class="text-center text-white/80">Account</div><div class="text-center text-white">Accumulated Points</div>' :
+                    '<div class="col-span-1 text-center text-white/80">No</div><div class="col-span-3 text-white/80">Function</div><div class="col-span-2 text-white/80">Sub-department (Program)</div><div class="col-span-2 text-white/80">Account</div><div class="col-span-2 text-center text-white">Accumulated Points per Employee</div>' :
                     '<div class="text-center text-white/80">No</div><div class="text-center text-white/80">ID</div><div class="text-center text-white/80">Fullname</div><div class="text-center text-white/80">Account</div><div class="text-center text-white/80">Function</div><div class="text-center text-white">Points</div>'
                 }
                     </div>
