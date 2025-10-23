@@ -1355,7 +1355,7 @@
         .playbook-description,
         .show-more-btn,
         .comment-input-section,
-        .insta-post > div:not(.insta-post-body):not(.comment-section) {
+        .insta-post>div:not(.insta-post-body):not(.comment-section) {
             flex-shrink: 0;
         }
 
@@ -2003,12 +2003,14 @@
                 <button class="playbook-tab" data-category="data">Data & Analysis</button>
                 <button class="playbook-tab" data-category="cx">Customer Experience</button>
                 <button class="playbook-tab" data-category="innovation">Innovation</button>
+                <button class="playbook-tab" data-category="entertainment">Entertainment</button>
             </div>
 
             <!-- Cards Grid -->
             <div id="playbook-slider-container" class="relative">
                 <div class="slider-viewport overflow-hidden">
-                    <div id="playbooksGrid" class="flex gap-6 items-stretch transition-transform duration-500 ease-in-out">
+                    <div id="playbooksGrid"
+                        class="flex gap-6 items-stretch transition-transform duration-500 ease-in-out">
                     </div>
                 </div>
 
@@ -3033,10 +3035,10 @@
         function openAttachmentsModal(urls) {
             const modal = document.getElementById('attachmentsModal');
             const attachmentsList = document.getElementById('attachmentsList');
-            
+
             // Clear previous content
             attachmentsList.innerHTML = '';
-            
+
             // Add each URL as a list item
             urls.forEach((url, index) => {
                 const listItem = document.createElement('li');
@@ -3048,24 +3050,24 @@
                 link.className = 'inline-flex items-center text-base font-semibold transition-colors duration-200 block break-all';
                 link.style.color = '#27aae1';
                 link.innerHTML = `<i class="fas fa-external-link-alt mr-2"></i>Material ${index + 1}`;
-                
+
                 // Add hover effects
-                link.addEventListener('mouseenter', function() {
+                link.addEventListener('mouseenter', function () {
                     this.style.color = '#1e90ff';
                 });
-                link.addEventListener('mouseleave', function() {
+                link.addEventListener('mouseleave', function () {
                     this.style.color = '#27aae1';
                 });
-                
+
                 listItem.appendChild(link);
                 attachmentsList.appendChild(listItem);
             });
-            
+
             // Show modal
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
-        
+
         function closeAttachmentsModal() {
             const modal = document.getElementById('attachmentsModal');
             modal.classList.add('hidden');
@@ -4201,6 +4203,21 @@
                     const playbooksCollectionRef = window.collection(window.db, 'playbooks');
                     // Fetch all documents from playbooks collection
                     const querySnapshot = await window.getDocs(playbooksCollectionRef);
+
+                    // Get reference to reactions collection
+                    const reactionsCollectionRef = window.collection(window.db, 'reactions');
+                    const reactionsSnapshot = await window.getDocs(reactionsCollectionRef);
+
+                    // Count reactions per playbook
+                    const reactionCounts = {};
+                    reactionsSnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const playbookId = data.playbook_id;
+                        if (playbookId) {
+                            reactionCounts[playbookId] = (reactionCounts[playbookId] || 0) + 1;
+                        }
+                    });
+
                     // Convert documents to array
                     const playbooks = [];
                     querySnapshot.forEach((doc) => {
@@ -4208,15 +4225,23 @@
                         playbooks.push({
                             id: doc.id,
                             ...data,
-                            createdAt: data.createdAt || data.timestamp || new Date()
+                            createdAt: data.createdAt || data.timestamp || new Date(),
+                            reactionCount: reactionCounts[doc.id] || 0
                         });
                     });
-                    // Sort by creation date (newest first)
+
+                    // Sort by reaction count (most likes first), then by creation date
                     playbooks.sort((a, b) => {
+                        // First sort by reaction count (descending)
+                        if (b.reactionCount !== a.reactionCount) {
+                            return b.reactionCount - a.reactionCount;
+                        }
+                        // If same reaction count, sort by date (newest first)
                         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
                         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
                         return dateB - dateA;
                     });
+
                     return playbooks;
                 } catch (error) {
                     console.error('❌ Error loading playbooks from Firebase:', error);
@@ -4231,6 +4256,7 @@
                 if (t.includes('predictive insights') || t.includes('data') || t.includes('analysis')) return 'data';
                 if (t.includes('customer experience')) return 'cx';
                 if (t.includes('innovation') || t.includes('creativity')) return 'innovation';
+                if (t.includes('entertainment') || t.includes('fun') || t.includes('inspiration')) return 'entertainment';
                 return 'productivity';
             }
 
@@ -4270,7 +4296,8 @@
                         'productivity': 0,
                         'data': 0,
                         'cx': 0,
-                        'innovation': 0
+                        'innovation': 0,
+                        'entertainment': 0
                     };
 
                     // Count only approved playbooks
@@ -4310,7 +4337,18 @@
                     // Only show playbooks that are approved
                     const filtered = firebasePlaybooks.filter(pb => pb.isApproved === true && mapCategory(pb.category) === activeCategory);
                     if (filtered.length === 0) {
-                        grid.innerHTML = '<div class="text-center p-8 text-gray-500">Không có playbook nào cho category này.</div>';
+                        grid.innerHTML = '<div class="w-full flex items-center justify-center p-8 text-gray-500 text-center">No playbooks available for this category.</div>';
+
+                        // Clear dots when no playbooks
+                        const dotsContainer = document.getElementById('slider-dots');
+                        if (dotsContainer) dotsContainer.innerHTML = '';
+
+                        // Hide prev/next buttons when no playbooks
+                        const prevButton = document.getElementById('slider-prev');
+                        const nextButton = document.getElementById('slider-next');
+                        if (prevButton) prevButton.style.display = 'none';
+                        if (nextButton) nextButton.style.display = 'none';
+
                         return;
                     }
                     filtered.forEach((pb) => {
@@ -4450,6 +4488,13 @@
                         // Load heart reactions for this playbook
                         loadHeartReaction(pb.id);
                     });
+
+                    // Show prev/next buttons when there are playbooks
+                    const prevButton = document.getElementById('slider-prev');
+                    const nextButton = document.getElementById('slider-next');
+                    if (prevButton) prevButton.style.display = '';
+                    if (nextButton) nextButton.style.display = '';
+
                     initializeSlider();
                     initializeClickEvents();
 
@@ -4542,8 +4587,10 @@
             function createDots() {
                 if (!dotsContainer) return;
 
+                // Re-query items from DOM to get current state
+                const currentItems = track.querySelectorAll('.insta-post');
                 const itemsToShow = getItemsToShow();
-                const totalPages = Math.max(1, items.length - itemsToShow + 1);
+                const totalPages = Math.max(1, currentItems.length - itemsToShow + 1);
 
                 dotsContainer.innerHTML = '';
 
@@ -4575,19 +4622,21 @@
             }
 
             function updateSlider() {
+                // Re-query items from DOM to get current state
+                const currentItems = track.querySelectorAll('.insta-post');
                 const itemsToShow = getItemsToShow();
-                const totalItems = items.length;
+                const totalItems = currentItems.length;
                 isMobile = window.innerWidth <= 768;
 
-                if (isMobile) {
+                if (isMobile && currentItems.length > 0) {
                     // On mobile, use scroll-based navigation
-                    const itemWidth = items[0].offsetWidth;
+                    const itemWidth = currentItems[0].offsetWidth;
                     const gap = parseFloat(window.getComputedStyle(track).gap) || 24;
                     const scrollLeft = currentIndex * (itemWidth + gap);
                     viewport.scrollLeft = scrollLeft;
-                } else {
+                } else if (currentItems.length > 0) {
                     // On desktop, use transform-based navigation
-                    const itemWidth = items[0].offsetWidth;
+                    const itemWidth = currentItems[0].offsetWidth;
                     const gap = parseFloat(window.getComputedStyle(track).gap) || 24;
                     const slideAmount = itemWidth + gap;
                     track.style.transform = `translateX(-${currentIndex * slideAmount}px)`;

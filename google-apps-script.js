@@ -580,7 +580,8 @@ function savePlaybookToFirebase(submissionData) {
         isApproved: { booleanValue: false },
         timestamp: { timestampValue: submissionData.timestamp || new Date().toISOString() },
         sheetKey: { stringValue: key },
-        supportingMaterials: { stringValue: submissionData.supportingMaterials || '' }
+        supportingMaterials: { stringValue: submissionData.supportingMaterials || '' },
+        thumbnail: { stringValue: submissionData.thumbnail || '' }
       }
     };
 
@@ -666,7 +667,7 @@ function updatePlaybookApproveStatus(sheetKey, isApproved) {
 
 function updatePlayBookByKey(documentName, data) {
   try {
-    const updateMask = 'updateMask.fieldPaths=category&updateMask.fieldPaths=description&updateMask.fieldPaths=email&updateMask.fieldPaths=isApproved&updateMask.fieldPaths=timestamp&updateMask.fieldPaths=sheetKey&updateMask.fieldPaths=supportingMaterials';
+    const updateMask = 'updateMask.fieldPaths=category&updateMask.fieldPaths=description&updateMask.fieldPaths=email&updateMask.fieldPaths=isApproved&updateMask.fieldPaths=timestamp&updateMask.fieldPaths=sheetKey&updateMask.fieldPaths=supportingMaterials&updateMask.fieldPaths=thumbnail';
     const updateUrl = `https://firestore.googleapis.com/v1/${documentName}?${updateMask}`;
 
     const firestoreData = {
@@ -677,7 +678,8 @@ function updatePlayBookByKey(documentName, data) {
         isApproved: { booleanValue: data.isApproved || false },
         timestamp: { timestampValue: data.timestamp || new Date().toISOString() },
         sheetKey: { stringValue: data.sheetKey },
-        supportingMaterials: { stringValue: data.supportingMaterials || '' }
+        supportingMaterials: { stringValue: data.supportingMaterials || '' },
+        thumbnail: { stringValue: data.thumbnail || '' }
       }
     };
 
@@ -779,6 +781,7 @@ function onFormSubmit(e) {
       category: rawData['Your Tip Category:'] ? rawData['Your Tip Category:'][0] : '',
       description: rawData['Description of Your Tip:'] ? rawData['Description of Your Tip:'][0] : '',
       supportingMaterials: rawData['Supporting Materials:'] ? rawData['Supporting Materials:'][0] : 'N/A',
+      thumbnail: rawData['Thumbnail/Visual representing your tip:'] ? rawData['Thumbnail/Visual representing your tip:'][0] : 'N/A',
       savedToFirebaseAt: new Date().toISOString()
     };
 
@@ -802,12 +805,12 @@ function checkApprovalStatus(e) {
     const range = e.range;
     const sheet = range.getSheet();
 
-    if (range.getColumn() < 6 || range.getColumn() > 10) {
+    if (range.getColumn() < 7 || range.getColumn() > 11) {
       return;
     }
 
     const editedRow = range.getRow();
-    const approvalValues = sheet.getRange(editedRow, 6, 1, 5).getValues()[0];
+    const approvalValues = sheet.getRange(editedRow, 7, 1, 5).getValues()[0];
     const approvedCount = approvalValues.filter(cell => String(cell).includes("Approved")).length;
 
     const lastColumn = sheet.getLastColumn();
@@ -863,7 +866,8 @@ function syncDataSheetToFirebase() {
       category: row[2] || '',
       description: row[3] || '',
       supportingMaterials: row[4] || '',
-      isApproved: (row[10] === "Approved"),
+      thumbnail: row[5] || '',
+      isApproved: (row[11] === "Approved"),
       sheetKey: sheetKey
     };
 
@@ -879,6 +883,63 @@ function syncDataSheetToFirebase() {
   });
 
   Logger.log('Sync completed.');
+}
+
+function syncPlaybookLikes() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+
+  Logger.log(`Starting sync for ${data.length} rows...`);
+
+  const LIKE_COLUMN_INDEX = 14;
+  const LIKE_COLUMN_SHEET = 15;
+
+  data.forEach((row, index) => {
+    const rowNumber = index + 2;
+
+    try {
+      const sheetTimestampObject = row[0];
+      const email = row[1];
+
+      if (!sheetTimestampObject || !email) {
+        Logger.log(`Skipping row ${rowNumber}: Missing Timestamp or Email.`);
+        return;
+      }
+
+      const standardTimestamp = new Date(sheetTimestampObject).toISOString();
+      const sheetKey = createPlaybookKey(email, standardTimestamp);
+
+      const documentName = findDocumentNameByKey(sheetKey);
+
+      if (documentName) {
+        const playbookId = documentName.split('/').pop();
+
+        if (!playbookId) {
+          Logger.log(`ERROR in row ${rowNumber}: Could not extract playbookId from ${documentName}`);
+          sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(0);
+          return;
+        }
+
+        const likeCount = countReactionsForPlaybook(playbookId);
+
+        sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(likeCount);
+        Logger.log(`Row ${rowNumber}: Found ${playbookId}. Setting like count = ${likeCount}.`);
+
+      } else {
+        Logger.log(`Row ${rowNumber}: Playbook not found for key ${sheetKey}. Setting like count = 0.`);
+        sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(0);
+      }
+
+    } catch (error) {
+      Logger.log(`ERROR processing row ${rowNumber}: ${error.toString()}`);
+      sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue('Error');
+    }
+  });
+
+  Logger.log('Like sync completed.');
+  SpreadsheetApp.getUi().alert('Finished updating like counts!');
 }
 
 // =============================================================================
@@ -2069,60 +2130,3 @@ function uninstallTeamLeaderboardSyncTrigger() {
   Logger.log(`Removed ${removed} team leaderboard sync triggers`);
   SpreadsheetApp.getUi().alert('Success', `Removed ${removed} automatic team sync trigger(s).`, SpreadsheetApp.getUi().ButtonSet.OK);
 }
-function syncPlaybookLikes() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-
-  const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
-
-  Logger.log(`Starting sync for ${data.length} rows...`);
-
-  const LIKE_COLUMN_INDEX = 14;
-  const LIKE_COLUMN_SHEET = 15;
-
-  data.forEach((row, index) => {
-    const rowNumber = index + 2;
-
-    try {
-      const sheetTimestampObject = row[0];
-      const email = row[1];
-
-      if (!sheetTimestampObject || !email) {
-        Logger.log(`Skipping row ${rowNumber}: Missing Timestamp or Email.`);
-        return;
-      }
-
-      const standardTimestamp = new Date(sheetTimestampObject).toISOString();
-      const sheetKey = createPlaybookKey(email, standardTimestamp);
-
-      const documentName = findDocumentNameByKey(sheetKey);
-
-      if (documentName) {
-        const playbookId = documentName.split('/').pop();
-
-        if (!playbookId) {
-          Logger.log(`ERROR in row ${rowNumber}: Could not extract playbookId from ${documentName}`);
-          sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(0);
-          return;
-        }
-
-        const likeCount = countReactionsForPlaybook(playbookId);
-
-        sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(likeCount);
-        Logger.log(`Row ${rowNumber}: Found ${playbookId}. Setting like count = ${likeCount}.`);
-
-      } else {
-        Logger.log(`Row ${rowNumber}: Playbook not found for key ${sheetKey}. Setting like count = 0.`);
-        sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue(0);
-      }
-
-    } catch (error) {
-      Logger.log(`ERROR processing row ${rowNumber}: ${error.toString()}`);
-      sheet.getRange(rowNumber, LIKE_COLUMN_SHEET).setValue('Error');
-    }
-  });
-
-  Logger.log('Like sync completed.');
-  SpreadsheetApp.getUi().alert('Finished updating like counts!');
-}
-
