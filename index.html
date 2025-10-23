@@ -4993,8 +4993,9 @@
                 commentListDiv.innerHTML = '';
 
                 if (querySnapshot.empty) {
-                    // Hide both comment list and show all comments button when no comments
-                    commentListDiv.style.display = 'none';
+                    // Show "Leave your comment" message when no comments
+                    commentListDiv.style.display = 'block';
+                    commentListDiv.innerHTML = '<p class="text-sm text-gray-400 italic px-2 py-3 text-center">Leave your comment</p>';
                     if (commentLinkElement) {
                         commentLinkElement.style.display = 'none';
                     }
