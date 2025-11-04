@@ -1793,7 +1793,7 @@
 
         .insta-post-image {
             width: 100%;
-            padding-bottom: 100%;
+            padding-bottom: 75%;
             background-color: #f5f5f5;
             background-size: cover;
             background-position: center;
@@ -1809,7 +1809,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: fill;
         }
 
         /* Container for everything below the image */
@@ -1933,13 +1933,13 @@
         /* Playbook description truncation */
         .playbook-description {
             display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.5;
-            max-height: 3em;
+            max-height: 5em;
             /* 2 lines * 1.5 line-height */
         }
 
@@ -2565,155 +2565,13 @@
                 </p>
             </div>
 
-            <!-- Rewards Layout -->
-            <div class="max-w-7xl mx-auto fade-in">
-                <div class="relative bg-white rounded-2xl p-8 sm:p-12 shadow-xl">
-
-                    <!-- Top Row: Major Rewards -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-16">
-
-                        <!-- Early Bird Rewards -->
-                        <div class="text-center">
-                            <div class="text-6xl lg:text-7xl font-bold text-[#27aae1] mb-4">03</div>
-                            <div class="relative">
-                                <!-- Reward Box with Connection -->
-                                <div
-                                    class="flex items-center justify-center bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 lg:p-8 text-white shadow-xl mb-6 relative h-[128px]">
-                                    <h3 class="text-2xl lg:text-3xl font-bold">200,000 VND</h3>
-                                    <!-- Connecting line to description -->
-                                    <div
-                                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full hidden lg:block">
-                                        <div class="w-0.5 h-8 bg-[#27aae1]"></div>
-                                    </div>
-                                </div>
-                                <!-- Description Box -->
-                                <div class="bg-gray-800 text-white rounded-xl p-4 shadow-lg">
-                                    <h4 class="font-bold text-sm lg:text-base">Early-Bird and Valid Submissions</h4>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- All Participants -->
-                        <div class="text-center">
-                            <div class="text-6xl lg:text-7xl font-bold text-[#27aae1] mb-4">All</div>
-                            <div class="relative">
-                                <!-- Special Blue Box -->
-                                <div
-                                    class="bg-gradient-to-br from-[#27aae1] to-blue-600 rounded-2xl p-6 lg:p-8 text-white shadow-xl mb-6 relative">
-                                    <h3 class="text-lg lg:text-xl font-bold mb-2">Be credited in Learning Profile</h3>
-                                    <h3 class="text-lg lg:text-xl font-bold">& Monthly Leaderboard</h3>
-                                    <!-- Connecting line to description -->
-                                    <div
-                                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full hidden lg:block">
-                                        <div class="w-0.5 h-8 bg-[#27aae1]"></div>
-                                    </div>
-                                </div>
-                                <!-- Description Box -->
-                                <div class="bg-gray-800 text-white rounded-xl p-4 shadow-lg">
-                                    <h4 class="font-bold text-sm lg:text-base">Valid Submissions</h4>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Top Performers -->
-                        <div class="text-center">
-                            <div class="text-6xl lg:text-7xl font-bold text-[#27aae1] mb-4">03</div>
-                            <div class="relative">
-                                <!-- Reward Box with Connection -->
-                                <div
-                                    class="bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 lg:p-8 text-white shadow-xl mb-6 relative h-[128px] flex items-center justify-center">
-                                    <h3 class="text-2xl lg:text-3xl font-bold">2,000,000 VND</h3>
-                                    <!-- Connecting line to description -->
-                                    <div
-                                        class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full hidden lg:block">
-                                        <div class="w-0.5 h-8 bg-[#27aae1]"></div>
-                                    </div>
-                                </div>
-                                <!-- Description Box -->
-                                <div class="bg-gray-800 text-white rounded-xl p-4 shadow-lg">
-                                    <h4 class="font-bold text-sm lg:text-base text-center">Top Account / Function /
-                                        Department<br>by Accumulated Points (Quarterly)</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Row: Submission Tier Rewards -->
-                    <div class="border-t-2 border-gray-200 pt-12">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
-
-                            <!-- Basic Submission -->
-                            <div class="text-center">
-                                <div class="relative">
-                                    <!-- Reward Amount -->
-                                    <div
-                                        class="bg-gradient-to-br from-[#27aae1] to-blue-600 rounded-2xl p-4 lg:p-6 text-white shadow-lg mb-4 relative">
-                                        <h3 class="text-xl lg:text-2xl font-bold">100,000 VND</h3>
-                                        <!-- Connecting line -->
-                                        <div
-                                            class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-                                            <div class="w-0.5 h-6 bg-[#27aae1]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Description -->
-                                    <div class="bg-white border-2 border-[#27aae1] rounded-xl p-4 shadow-md">
-                                        <h4 class="font-bold text-gray-800 text-sm lg:text-base">Basic Submission</h4>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Intermediate Submission -->
-                            <div class="text-center">
-                                <div class="relative">
-                                    <!-- Reward Amount -->
-                                    <div
-                                        class="bg-gradient-to-br from-[#27aae1] to-blue-600 rounded-2xl p-4 lg:p-6 text-white shadow-lg mb-4 relative">
-                                        <h3 class="text-xl lg:text-2xl font-bold">150,000 VND</h3>
-                                        <!-- Connecting line -->
-                                        <div
-                                            class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-                                            <div class="w-0.5 h-6 bg-[#27aae1]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Description -->
-                                    <div class="bg-white border-2 border-[#27aae1] rounded-xl p-4 shadow-md">
-                                        <h4 class="font-bold text-gray-800 text-sm lg:text-base">Intermediate Submission
-                                        </h4>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Advanced Submission -->
-                            <div class="text-center">
-                                <div class="relative">
-                                    <!-- Reward Amount -->
-                                    <div
-                                        class="bg-gradient-to-br from-[#27aae1] to-blue-600 rounded-2xl p-4 lg:p-6 text-white shadow-lg mb-4 relative">
-                                        <h3 class="text-xl lg:text-2xl font-bold">200,000 VND</h3>
-                                        <!-- Connecting line -->
-                                        <div
-                                            class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-                                            <div class="w-0.5 h-6 bg-[#27aae1]"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Description -->
-                                    <div class="bg-white border-2 border-[#27aae1] rounded-xl p-4 shadow-md">
-                                        <h4 class="font-bold text-gray-800 text-sm lg:text-base">Advanced Submission
-                                        </h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Learning Profile Banner -->
-                        <div class="mt-8">
-                            <div
-                                class="bg-gradient-to-r from-[#27aae1] to-blue-600 rounded-2xl p-6 text-center shadow-lg">
-                                <h3 class="text-white font-bold text-lg lg:text-xl">Be credited in Learning Profile &
-                                    Monthly
-                                </h3>
-                            </div>
-                        </div>
+            <!-- Rewards Image -->
+            <div class="max-w-7xl mx-auto mb-12 fade-in">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-4 sm:p-6">
+                        <img src="https://res.cloudinary.com/hypertal/image/upload/v1762216376/kms/Prize_eswaca.png"
+                            alt="Scheme & Rewards" class="w-full h-auto rounded-lg shadow-lg object-cover"
+                            loading="lazy">
                     </div>
                 </div>
             </div>
@@ -2735,10 +2593,8 @@
                 <!-- Points Table -->
                 <div class="bg-white rounded-2xl shadow-xl overflow-hidden fade-in">
                     <div class="p-4 sm:p-6">
-                        <img src="https://res.cloudinary.com/hypertal/image/upload/v1761200163/kms/how-to-get-the-point_ttxiti.png" 
-                             alt="How to Get Points Table" 
-                             class="w-full h-auto rounded-lg shadow-lg"
-                             loading="lazy">
+                        <img src="https://res.cloudinary.com/hypertal/image/upload/v1761200163/kms/how-to-get-the-point_ttxiti.png"
+                            alt="How to Get Points Table" class="w-full h-auto rounded-lg shadow-lg" loading="lazy">
                     </div>
                 </div>
             </div>
@@ -4525,6 +4381,18 @@
                 return 'productivity';
             }
 
+            // Map category to specific image URL
+            function getCategoryImage(category) {
+                const categoryImages = {
+                    'productivity': 'https://res.cloudinary.com/hypertal/image/upload/v1762215682/kms/productivity_l0i11i.png',
+                    'data': 'https://res.cloudinary.com/hypertal/image/upload/v1762215682/kms/data-and-analysis_ti2qcw.png',
+                    'cx': 'https://res.cloudinary.com/hypertal/image/upload/v1762215682/kms/customer-experience_eyx79a.png',
+                    'innovation': 'https://res.cloudinary.com/hypertal/image/upload/v1762215683/kms/innovation_dcjvfs.png',
+                    'entertainment': 'https://res.cloudinary.com/hypertal/image/upload/v1762215683/kms/entertainment_dyi3k8.png'
+                };
+                return categoryImages[category] || categoryImages['productivity'];
+            }
+
             function formatTimestamp(timestamp) {
                 try {
                     const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -4624,7 +4492,7 @@
 
                         // Check if description is long enough to need truncation
                         const description = pb.description || '';
-                        const needsShowMore = description.length > 120; // Approximate 2 lines worth of text
+                        const needsShowMore = description.length > 150; // Approximate 2 lines worth of text
 
                         // Store full description in data attribute for modal
                         if (needsShowMore) {
@@ -4637,6 +4505,10 @@
                         const hasSupportingMaterials = supportingMaterials.length > 0;
                         const singleLink = supportingMaterials.length === 1;
 
+                        // Get category-specific image
+                        const playbookCategory = mapCategory(pb.category);
+                        const categoryImageUrl = getCategoryImage(playbookCategory);
+
                         postElement.innerHTML = `
                             <div class="insta-post-header">
                                 <div class="insta-post-avatar">
@@ -4648,8 +4520,8 @@
                                 </div>
                             </div>
                             <div class="insta-post-image">
-                                <img src="https://res.cloudinary.com/dawbc3ysp/image/upload/v1759405305/kms-ai-taskforce/kms-ai-image_ilk6jq.webp" 
-                                     alt="AI Playbook" 
+                                <img src="${categoryImageUrl}" 
+                                     alt="AI Playbook - ${playbookCategory}" 
                                      loading="lazy"
                                      onerror="this.style.display='none';">
                             </div> 
