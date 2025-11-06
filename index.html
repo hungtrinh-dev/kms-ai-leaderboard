@@ -1821,7 +1821,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: fill;
+            object-fit: cover;
         }
 
         /* Container for everything below the image */
@@ -2026,8 +2026,8 @@
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <div class="flex items-center justify-center cursor-pointer" onclick="window.location.reload()">
-                        <img src="https://kms-technology.com/wp-content/uploads/2022/03/logo-white.svg"
-                            alt="KMS Technology" class="h-10 md:h-12 lg:h-14 w-auto"
+                        <img src="https://res.cloudinary.com/hypertal/image/upload/v1762410361/kms/white-logo_zdsbul.png"
+                            alt="KMS Technology" class="h-14 md:h-16 lg:h-20 w-auto"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
 
                     </div>
@@ -2312,7 +2312,7 @@
                             class="w-16 h-16 bg-gradient-to-r from-[#27aae1] to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-robot text-white text-2xl"></i>
                         </div>
-                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Welcome to KMS AI Tips Sharing</h4>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Welcome to KMS AI for Everyone</h4>
                         <p class="text-gray-600 text-sm">Sign in with your Google account to access exclusive features
                             and track your progress</p>
                     </div>
@@ -2581,7 +2581,7 @@
             <div class="max-w-7xl mx-auto mb-12 fade-in">
                 <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
                     <div class="p-4 sm:p-6">
-                        <img src="https://res.cloudinary.com/hypertal/image/upload/v1762216376/kms/Prize_eswaca.png"
+                        <img src="https://res.cloudinary.com/hypertal/image/upload/v1762410592/kms/Prize_nvslbp.png"
                             alt="Scheme & Rewards" class="w-full h-auto rounded-lg shadow-lg object-cover"
                             loading="lazy">
                     </div>
@@ -2800,7 +2800,7 @@
                             <i class="fas fa-robot text-white text-xl"></i>
                         </div>
                     </div>
-                    <span class="text-2xl font-bold">KMS AI Tips Sharing</span>
+                    <span class="text-2xl font-bold">KMS AI for Everyone</span>
                 </div>
                 <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
                     Empowering KMS Technology with community-driven AI knowledge sharing.
@@ -4396,11 +4396,11 @@
             // Map category to specific image URL
             function getCategoryImage(category) {
                 const categoryImages = {
-                    'productivity': 'https://res.cloudinary.com/hypertal/image/upload/v1762215682/kms/productivity_l0i11i.png',
-                    'data': 'https://res.cloudinary.com/hypertal/image/upload/v1762215682/kms/data-and-analysis_ti2qcw.png',
-                    'cx': 'https://res.cloudinary.com/hypertal/image/upload/v1762215682/kms/customer-experience_eyx79a.png',
-                    'innovation': 'https://res.cloudinary.com/hypertal/image/upload/v1762215683/kms/innovation_dcjvfs.png',
-                    'entertainment': 'https://res.cloudinary.com/hypertal/image/upload/v1762215683/kms/entertainment_dyi3k8.png'
+                    'productivity': 'https://res.cloudinary.com/hypertal/image/upload/v1762410295/kms/productivity_x7c6xa.png',
+                    'data': 'https://res.cloudinary.com/hypertal/image/upload/v1762410295/kms/data-and-analysis_qrtjm8.png',
+                    'cx': 'https://res.cloudinary.com/hypertal/image/upload/v1762410304/kms/customer-experience_gvautg.png',
+                    'innovation': 'https://res.cloudinary.com/hypertal/image/upload/v1762410294/kms/innovation_l8hhdg.png',
+                    'entertainment': 'https://res.cloudinary.com/hypertal/image/upload/v1762410294/kms/entertainment_pvbasm.png'
                 };
                 return categoryImages[category] || categoryImages['productivity'];
             }
