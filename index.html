@@ -1805,7 +1805,7 @@
 
         .insta-post-image {
             width: 100%;
-            padding-bottom: 75%;
+            padding-bottom: 65%;
             background-color: #f5f5f5;
             background-size: cover;
             background-position: center;
@@ -1945,13 +1945,13 @@
         /* Playbook description truncation */
         .playbook-description {
             display: -webkit-box;
-            -webkit-line-clamp: 3;
-            line-clamp: 3;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.5;
-            max-height: 5em;
+            max-height: 6em;
             /* 2 lines * 1.5 line-height */
         }
 
@@ -2022,12 +2022,12 @@
 <body class="bg-gray-50 overflow-x-hidden">
     <!-- Navigation -->
     <header class="fixed w-full z-50 bg-gradient-to-r from-[#27aae1] to-[#1e90ff] shadow-lg" s>
-        <div class="container mx-auto px-4 sm:px-6 py-4">
+        <div class="container mx-auto px-4 sm:px-6 py-2">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-3">
                     <div class="flex items-center justify-center cursor-pointer" onclick="window.location.reload()">
                         <img src="https://res.cloudinary.com/hypertal/image/upload/v1762410361/kms/white-logo_zdsbul.png"
-                            alt="KMS Technology" class="h-14 md:h-16 lg:h-20 w-auto"
+                            alt="KMS Technology" class="h-12 lg:h-16  w-auto"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
 
                     </div>
@@ -2179,7 +2179,7 @@
                         <h1
                             class="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 leading-relaxed pt-5">
                             AI FOR EVERYONE
-                            <div class="hero-tagline mt-4 sm:mt-3 pb-2">
+                            <div class="hero-tagline mt-4 sm:mt-3 pb-2 pt-3">
                                 <p
                                     class="hero-tagline-text text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-nowrap">
                                     Community-driven Initiative<br>
@@ -2209,7 +2209,7 @@
                         <div class="hero-image-glow">
                             <img src="https://res.cloudinary.com/dawbc3ysp/image/upload/v1759405305/kms-ai-taskforce/kms-ai-image_ilk6jq.webp"
                                 alt="AI Innovation"
-                                class="hero-image w-full max-w-md lg:max-w-lg xl:max-w-xl h-auto rounded-2xl object-cover">
+                                class="hero-image w-full max-w-md lg:max-w-lg xl:max-w-xl h-[450px] rounded-2xl object-cover">
                         </div>
                     </div>
                 </div>
@@ -2791,16 +2791,10 @@
         <div class="container mx-auto px-6">
             <div class="text-center">
                 <div class="flex items-center justify-center space-x-3 mb-6">
-                    <div class="w-12 h-12 flex items-center justify-center">
-                        <img src="https://kms-technology.com/wp-content/uploads/2022/03/logo-white.svg"
-                            alt="KMS Technology" class="h-10 w-auto"
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div
-                            class="w-12 h-12 bg-gradient-to-r from-[#27aae1] to-[#1e90ff] rounded-lg items-center justify-center hidden">
-                            <i class="fas fa-robot text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <span class="text-2xl font-bold">KMS AI for Everyone</span>
+                    <img src="https://res.cloudinary.com/hypertal/image/upload/v1762410361/kms/white-logo_zdsbul.png"
+                        alt="KMS Technology" class="h-12 lg:h-16  w-auto "
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="text-2xl font-bold"> AI for Everyone</span>
                 </div>
                 <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
                     Empowering KMS Technology with community-driven AI knowledge sharing.
@@ -4504,7 +4498,7 @@
 
                         // Check if description is long enough to need truncation
                         const description = pb.description || '';
-                        const needsShowMore = description.length > 150; // Approximate 2 lines worth of text
+                        const needsShowMore = description.length > 200; // Approximate 2 lines worth of text
 
                         // Store full description in data attribute for modal
                         if (needsShowMore) {
